@@ -13,8 +13,8 @@ user = 'https://m.mafengwo.cn'
 dk = "https://m.mafengwo.cn/activity/daka"
 
 
-pt = "akaachea@163.com"
-pd = "5021529"
+pt = ""
+pd = ""
 mobileEmulation = {'deviceName': 'iPhone 6'}
 
 
@@ -39,7 +39,7 @@ u = driver.find_element_by_name("passport")
 # print(u)
 u.send_keys(pt)
 p = driver.find_element_by_name("password") 
-p.send_keys("5021529")
+p.send_keys(pd)
 submit = driver.find_element_by_css_selector("button.btn") 
 submit.click()
 
