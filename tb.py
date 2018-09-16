@@ -150,19 +150,19 @@ browser = webdriver.Chrome()
 # browser.get('https://www.taobao.com')
 # time.sleep(1)
 # browser.switch_to_window(browser.window_handles[0])
-# browser.get('https://python.org')
+# # browser.get('https://python.org')
 
-# test 14 异常处理
+# # test 14 异常处理
 
-from selenium.common.exceptions import TimeoutException, NoSuchElementException
+# from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
-try:
-    browser.get('https://www.baidu.com')
-except TimeoutException:
-    print('Time Out')
-try:
-    browser.find_element_by_id('hello')
-except NoSuchElementException:
-    print('No Element')
-finally:
-    browser.close()
+# try:
+#     browser.get('https://www.baidu.com')
+# except TimeoutException:
+#     print('Time Out')
+# try:
+#     browser.find_element_by_id('hello')
+# except NoSuchElementException:
+#     print('No Element')
+# finally:
+#     browser.close()
