@@ -13,7 +13,7 @@ lg = "https://passport.mafengwo.cn/login/"
 user = 'https://m.mafengwo.cn'
 
 
-data = {'passport':"akaachea@163.com",'password':"5021529"}
+data = {'passport':"",'password':""}
 s = requests.Session()
 l = s.post(lg, data=data, headers=header)
 # print(l.text)
