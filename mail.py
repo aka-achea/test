@@ -30,7 +30,7 @@ msg['To'] = ", ".join(toaddr)
 msg['Subject'] = config[choice]['title']
 msg.attach(MIMEText(body,'plain'))
 
-if choice == 'KC2':
+if choice == 'KC2' or 'k':
     attach = config[choice]['attach']
     # print(attach)
     with open(attach,'rb') as fo:
