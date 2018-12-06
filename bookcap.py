@@ -14,12 +14,13 @@ print(width,height)
 auto.PAUSE = 1
 auto.click(150,150,button='left')
 
-name = "我只想和你说说话"
+name = input('Book Name: ')
+pages = input('Total page: ')
 
 def scan(name,p):
     auto.screenshot(name+"_"+p+".png",region=(125,90, 620, 815))
 
-for p in range(1,400):
+for p in range(1,pages):
     scan(name,str(p))
     time.sleep(1)
     auto.typewrite(['right'])
