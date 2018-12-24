@@ -3,23 +3,12 @@
 #Python3
 
 from urllib.parse import quote
-import re,os,json, time, wget,shutil,sys,sqlite3,coloredlogs,logging
+import re,os,json, time, shutil,sys,sqlite3,coloredlogs,logging,argparse
 from bs4 import BeautifulSoup
 from urllib.request import urlopen,Request,HTTPError,unquote
 from html.parser import HTMLParser
+from prettytable import PrettyTable , from_db_cursor
 
-
-Usage = "Note: Pls clean up db first\n\
-Usage:\n\
-book s BOOKNAME [vv] -- Search single book\n\
-book m [vv] -- Search all book from list\n\
-book c [vv] -- clear DB \n\
-book q a [vv] -- query all library \n\
-book q s -- query best library\n\
-book q l LIBRARY -- query one libary\n\
-book q b BOOK -- query one book\n\
-book q ll -- list all book found\n\
-"
 
 headers = {
     "Accept":"text/html,application/xhtml+xml,application/xml; " \
@@ -38,61 +27,59 @@ link = set() #link to library list of different pages
 D = {}
 fail = []
 masterpath = 'E:\\UT\\'
+logfilelevel = 10
 logfile = masterpath+'book.log'
 database = masterpath+'book.db'
 wishlist = masterpath+'book.ini'
+blacklist = masterpath+'blacklistlib.txt'
 QueryURL = "http://ipac.library.sh.cn/ipac20/ipac.jsp?menu=search&aspect=basic_search&profile=sl&ri=&index=.TW&term="
 
 
-"""Logger Setup"""
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-# create a file handler
-if os.path.isfile(logfile):os.remove(logfile)
-handler = logging.FileHandler(logfile)
-handler.setLevel(logging.DEBUG)
-# create a logging format
-formatter = logging.Formatter('%(asctime)s - %(message)s')
-handler.setFormatter(formatter)
-# add the handlers to the l
-logger.addHandler(handler)
-#l.addHandler(console_handler)
-
-class myconsolelog():
-    def __init__(self):
+class mylogger(): # Version: 20181222
+    def __init__(self,logfile,logfilelevel,funcname):
+        self.funcname = funcname
+        logging.basicConfig(level=logfilelevel,filename=logfile,filemode='w',
+                            datefmt='%m-%d %H:%M:%S',
+                            format='%(asctime)s <%(name)s>[%(levelname)s] %(message)s')
+        self.logger = logging.getLogger(funcname)
         coloredlogs.DEFAULT_LEVEL_STYLES= {
-                                            'debug': {'color': 'magenta','bold': True},
-                                            'info': {'color': 'yellow','bold': True},
-                                            'warning': {'color': 'green','bold': True},
-                                            'error': {'color': 'red','bold': True}
+                                        #'debug': {'color': 'magenta','bold': True},
+                                        'info': {'color': 'green','bold': True},
+                                        'warning': {'color': 'yellow','bold': True},
+                                        'error': {'color': 'red','bold': True},
+                                        'critical': {'color': 'magenta','bold': True}
                                             }
         coloredlogs.DEFAULT_LOG_FORMAT = '%(message)s'
-        coloredlogs.install(level='warning',logger=logger)
-    def info(self,m): #default
-        logger.warning(m)
-    def debug(self,m): #vv
-        logger.debug(m)
-    def verbose(self,m): #v
-        logger.info(m)
-    def err(self,m):
-        logger.error(m)
-l = myconsolelog()
-"""Logger Setup"""
+        coloredlogs.install(level='info',logger=self.logger)  
+    def debug(self,msg):
+        self.logger.debug(msg)
+    def info(self,msg):
+        self.logger.info(msg)
+    def warning(self,msg):      
+        self.logger.warning(msg)
+    def error(self,msg):      
+        self.logger.error(msg)
+    def critical(self,msg):  
+        self.logger.critical(msg)
+    def verbose(self,msg):     
+        self.logger.debug(msg)
 
-class dec: # tracer
-    def __init__(self,func):
-        self.func = func
-    def __call__(self,*args, **kw):
-        l.verbose('>>>> Call %s()' % self.func.__name__)
-        #start = datetime.datetime.now().microsecond
-        result = self.func(*args, **kw)
-        #elapsed = (datetime.datetime.now().microsecond - start)
-        l.verbose('<<<< Exit %s()' % self.func.__name__)
-        #l.verbose('++++ Function '+self.func.__name__+' spend ' +str(elapsed)
-        return result
 
-@dec
+# class dec: # tracer
+#     def __init__(self,func):
+#         self.func = func
+#     def __call__(self,*args, **kw):
+#         # l.verbose('>>>> Call %s()' % self.func.__name__)
+#         #start = datetime.datetime.now().microsecond
+#         result = self.func(*args, **kw)
+#         #elapsed = (datetime.datetime.now().microsecond - start)
+#         # l.verbose('<<<< Exit %s()' % self.func.__name__)
+#         #l.verbose('++++ Function '+self.func.__name__+' spend ' +str(elapsed)
+#         return result
+
 def open_link(URL):
+    funcname = __name__
+    l = mylogger(logfile,logfilelevel,funcname)
     l.debug(URL)
     req = Request(URL,headers=headers)
     try:
@@ -101,11 +88,12 @@ def open_link(URL):
         #l.verbose(html.info())
         l.verbose(html.getcode())
     except HTTPError as e:
-        l.err(e) #5xx,4xx
+        l.error(e) #5xx,4xx
     return html
 
-@dec
 def modificate(text):
+    funcname = __name__
+    l = mylogger(logfile,logfilelevel,funcname)    
     #file_name = re.sub(r'\s*:\s*', u' - ', file_name)    # for FAT file system
     text = str(text)
     before = text
@@ -120,72 +108,81 @@ def modificate(text):
         l.debug("After modify >>> "+after)
     return text
 
-@dec
 def search_link(book):
+    funcname = __name__
+    l = mylogger(logfile,logfilelevel,funcname)     
     l.debug("Transalte to Web code")
     l.debug(quote(book))
     qweb = QueryURL+quote(book)
     return qweb
 
-"""
-@dec
-def create_db():
-    conn = sqlite3.connect('db')
-    cursor = conn.cursor()
-    cursor.execute('create table inventory (SN varchar(20) primary key,\
-                    book varchar(20),lib varchar(20),cat varchar(20) )' )
-    cursor.close()
-    conn.close()
-"""
-
-@dec
-class db:
+class db():
     def create(self):
+        funcname = __name__
+        l = mylogger(logfile,logfilelevel,funcname) 
         conn = sqlite3.connect(database)
         cursor = conn.cursor()
         cursor.execute('create table inventory (SN varchar(20) primary key,\
                         book varchar(20),lib varchar(20),cat varchar(20)  )' )
         cursor.close()
         conn.close()
+
     def lib(self,lib):
+        funcname = __name__
+        l = mylogger(logfile,logfilelevel,funcname)         
         conn = sqlite3.connect(database)
         cursor = conn.cursor()
-        cursor.execute('select distinct cat,  book from inventory where lib = ? order by cat' , (lib,))
-        values = cursor.fetchall()
-        for i in values: l.info(i)
+        cursor.execute('select distinct book as 图书, cat as 索书号 from inventory \
+                        where lib = ? order by book' , (lib,))
+        v = from_db_cursor(cursor)
         cursor.close()
         conn.close()
+        return v
+
     def all(self):
+        funcname = __name__
+        l = mylogger(logfile,logfilelevel,funcname)         
         l.info(">>>>>>>显示所有图书<<<<<<<")
         l.info("="*26)
         conn = sqlite3.connect(database)
         cursor = conn.cursor()
-        cursor.execute('select lib,book,SN,cat from inventory ')
-        values = cursor.fetchall()
-        for i in values: l.info(i)
+        cursor.execute('select lib as 图书馆,book as 书,SN,cat as 索书号 from inventory ')
+        v = from_db_cursor(cursor)
         cursor.close()
         conn.close()
+        return v
+
     def sum(self):
+        funcname = __name__
+        l = mylogger(logfile,logfilelevel,funcname)         
         l.info(">>显示书种类最多的图书馆<<")
         l.info("="*26)
         conn = sqlite3.connect(database)
         cursor = conn.cursor()
-        cursor.execute('select lib,count(distinct(book)) as c from inventory group by lib having c > 1 order by c desc limit 10')
-        values = cursor.fetchall()
-        for i in values: l.info(i)
+        cursor.execute('select lib as 图书馆,count(distinct(book)) as 本 from inventory \
+                        group by 图书馆 having 本 > 1 order by 本 desc limit 10')
+        v = from_db_cursor(cursor)
         cursor.close()
         conn.close()
+        return v
+
     def book(self,book):
+        funcname = __name__
+        l = mylogger(logfile,logfilelevel,funcname)         
         l.info(">>>>显示有此书的图书馆<<<<")
         l.info("="*26)
         conn = sqlite3.connect(database)
         cursor = conn.cursor()
-        cursor.execute('select distinct lib, book,cat from inventory where book like ?', (book,))
-        values = cursor.fetchall()
-        for i in values: l.info(i)
+        cursor.execute('select distinct lib as 图书馆, book as 书,cat as 索书号 from inventory \
+                        where book like ?', (book,))
+        v = from_db_cursor(cursor)
         cursor.close()
         conn.close()
-    def list(self):
+        return v
+
+    def listbook(self):
+        funcname = __name__
+        l = mylogger(logfile,logfilelevel,funcname)         
         l.info(">>>>显示找到的图书列表<<<<")
         l.info("="*26)
         conn = sqlite3.connect(database)
@@ -196,8 +193,10 @@ class db:
         cursor.close()
         conn.close()
 
-@dec  #return version,num
+# @dec  #return version,num
 def find_book_ver(qweb,book):
+    funcname = __name__
+    l = mylogger(logfile,logfilelevel,funcname) 
     try:
         global version,num
         html = open_link(qweb)
@@ -232,7 +231,7 @@ def find_book_ver(qweb,book):
                     #sys.exit()
                     pass
             if version == []: #there is book, but name doesn't match
-                l.err("请确认书名")
+                l.error("请确认书名")
                 sys.exit()
             else:
                 for i in version : l.debug(i)
@@ -242,8 +241,10 @@ def find_book_ver(qweb,book):
         print(e)
     return version,num
 
-@dec #return other library link
+# @dec #return other library link
 def find_other_lib(v):
+    funcname = __name__
+    l = mylogger(logfile,logfilelevel,funcname)     
     try:
         global link
         #bookname = bsObj.find("a",{"class":"largeAnchor"})
@@ -260,7 +261,7 @@ def find_other_lib(v):
                 T = 0
             else:
                 T = T - 1
-                l.err("重新加载网页")
+                l.error("重新加载网页")
         ol = (str(other).split(" "))
         l.debug(ol)
         try:
@@ -276,7 +277,7 @@ def find_other_lib(v):
             l.debug("Other lib list : ")
             l.debug(link)
         except IndexError as e:
-            l.err("没有其他馆址")
+            l.error("没有其他馆址")
     except AttributeError as e:
         print(e)
     #time.sleep(3)
@@ -285,8 +286,10 @@ def find_other_lib(v):
     return link
 
 #馆址	馆藏地	索书号	状态	应还日期 馆藏类型 馆藏条码
-@dec
+# @dec
 def find_library(bsObj,book):
+    funcname = __name__
+    l = mylogger(logfile,logfilelevel,funcname) 
     global D, fail
     for i in bsObj.find_all("tr",{"height":"15"}):
         status = i.td.next_sibling.next_sibling.next_sibling.text
@@ -319,15 +322,17 @@ def find_library(bsObj,book):
                     cursor.execute("insert into inventory values (?,?,?,?)", (SN,book,lib,cat))
                 except sqlite3.IntegrityError as e:
                     l.verbose(e)
-                    l.err("Duplicate: "+SN+" "+book+" "+lib)
+                    l.error("Duplicate: "+SN+" "+book+" "+lib)
             cursor.close()
             conn.commit()
             conn.close()
         else:
             l.info(status)
 
-@dec
+# @dec
 def single(book):
+    funcname = __name__
+    l = mylogger(logfile,logfilelevel,funcname) 
     l.info("搜寻图书："+book)
     #l.info("Link>> " + link)
     qweb = search_link(book)
@@ -349,125 +354,89 @@ def single(book):
         bsObj = BeautifulSoup(open_link(lib),"html.parser")
         find_library(bsObj,book)
 
-"""
-@dec
-def query():
-    conn = sqlite3.connect('db')
-    cursor = conn.cursor()
-
-    l.info("="*26)
-
-    values = cursor.fetchall()
-    for i in values: l.info(i)
-    l.info("="*26)
-
-    l.info(">>显示书数量最多的图书馆<<")
-    l.info("="*26)
-    cursor.execute('select lib,count(SN) as c from inventory group by lib having c > 1 order by c desc ')
-    values = cursor.fetchall()
-    for i in values: l.info(i)
-    l.info("="*26)
-
-    l.info(">>显示书种类最多的图书馆<<")
-    l.info("="*26)
-    cursor.execute('select lib,count(distinct(book)) as c from inventory group by lib having c > 1 order by c desc')
-    values = cursor.fetchall()
-    for i in values: l.info(i)
-    l.info("="*26)
-
-    library = (values[0][0])
-    l.info(library)
-    cmd = 'select distinct(book) from inventory where lib = "'+ library + '"'
-    #l.info(cmd)
-    cursor.execute(cmd)
-    values = cursor.fetchall()
-    for i in values: l.info(i[0])
-    l.info("="*26)
-
-    cursor.close()
-    conn.close()
-"""
-
-
 def main():
-    if len(sys.argv) < 2:
-        l.info(Usage)
-        sys.exit()
+    funcname = __name__
+    l = mylogger(logfile,logfilelevel,funcname) 
+    parser = argparse.ArgumentParser(description = 'Library search tool')
+    parser.add_argument('-s','--single',help='Search single book ')
+    parser.add_argument('-m','--multiple',help='Search multiple books',action='store_true')
+    parser.add_argument('-c','--clean',help='Clean database',action='store_true')
+    parser.add_argument('-qa',help='Query all find',action='store_true')
+    parser.add_argument('-ql',help='Query one library')
+    parser.add_argument('-qs',help='Query one book')
+    parser.add_argument('-qb',help='Query best library',action='store_true')
+    args = parser.parse_args()
 
-    if sys.argv[-1] == 'v':
-        l.verbose("Enable verbose log")
+    if args.single:
+        book = args.single
+        single(book)
 
-    elif sys.argv[-1] == 'vv':
-        l.debug("Enable debug log")
-
-
-    if sys.argv[1] == 's':
-        if sys.argv[2]:
-            book = sys.argv[2]
-            single(book)
-        else:
-            l.err("Book Name pls")
-    elif sys.argv[1] == 'm':
-        for i in open(wishlist,'r'):
-            book = i.strip()
-            single(book)
-    elif sys.argv[1] == 'q':
-        if len(sys.argv) < 3:
-            l.info(Usage)
-            sys.exit()
-        elif sys.argv[2] == 'a': #all book with library
-            r = db()
-            r.all()
-        elif sys.argv[2] == 'b': #one book
-            if len(sys.argv) < 4:
-                l.info(Usage)
-                sys.exit()
-            else:
-                r = db()
-                r.book(sys.argv[3])
-        elif sys.argv[2] == 'l': #one libary
-            if len(sys.argv) < 4:
-                l.info(Usage)
-                sys.exit()
-            else:
-                r = db()
-                r.lib(sys.argv[3])
-        elif sys.argv[2] == 's': # summary
-            r = db()
-            r.sum()
-        elif sys.argv[2] == 'll':
-            r = db()
-            r.list()
-        else:
-            l.info(Usage)
-        l.info("="*26)
-    elif sys.argv[1] == 'c':
+    elif args.multiple == True:
+        l.info('Search multiple books')
+        with open(wishlist, 'r') as l:
+            for i in l:
+                book = i.strip()
+                single(book)
+    
+    elif args.clean == True:
+        l.info('Clean up database')
         if os.path.isfile(database): os.remove(database)
         r = db()
         r.create()
+
+    elif args.qa == True:
+        l.info('all find')
+        r = db()
+        v = r.all()
+        l.info(v.get_string(fields = ['图书馆','书','SN','索书号']))
+
+    elif args.qs:
+        book = args.qs
+        l.info('Search : '+book)
+        r = db()
+        v = r.book(book)
+        l.info(v.get_string(fields = ['图书馆','索书号']))
+
+    elif args.ql:
+        lib = args.ql
+        print(lib)
+        r = db()
+        v = r.lib(lib)
+        l.info(v.get_string(fields = ['图书','索书号']))
+
+    elif args.qb == True:
+        # print('best')
+        r = db()
+        v = r.sum()
+        l.info(v.get_string(fields = ['图书馆','本']))
+
     else:
-        l.info(Usage)
+        parser.print_help()
+
 
 if __name__=='__main__':
     main()
 
+
 """
 Changelog:
-2017.7.22 basic query funtion v1.0
-2017.7.23 add link search, fix column issue v1.1
-2017.7.24 enable logging, re-org structure v1.2
-2017.7.25 add DB query v1.3
-2017.7.26 fix timeout issue v1.4
-2017.7.27 isolate single book query v1.5
-2017.7.28 build multiple book query v1.6
-2017.7.29 optimize sql query v1.7
-2017.11.5 update usage comment v1.8
-2018.1.4 add logger, dec v1.9
-2018.1.13 fix log bug, optimize DB query v2.0
+2018.12.24 use argparse,prettytable v2.2
 2018.1.15 add DB class v2.1
+2018.1.13 fix log bug, optimize DB query v2.0
+2018.1.4 add logger, dec v1.9
+2017.11.5 update usage comment v1.8
+2017.7.29 optimize sql query v1.7
+2017.7.28 build multiple book query v1.6
+2017.7.27 isolate single book query v1.5
+2017.7.26 fix timeout issue v1.4
+2017.7.25 add DB query v1.3
+2017.7.24 enable logging, re-org structure v1.2
+2017.7.23 add link search, fix column issue v1.1
+2017.7.22 basic query funtion v1.0
+
 
 Flow chart:
-search_link find_book_ver  find_other_lib  find_library     query
-    |             |              |              |              |
-q2 ---> qweb ---------> [version] ---> link --------------> lib ---> Result
+search_link find_book_ver  find_other_lib  find_library       query
+    |             |               |              |              |
+q2 ---> qweb ---------> [version] ---> link ------------> lib ---> Result
 """
