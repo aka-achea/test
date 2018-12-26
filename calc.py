@@ -15,5 +15,12 @@ def mp3calc():
 def airticket():
     pass
 
-if if __name__ == "__main__":
-    pass
+def profit():
+    days = 14
+    cost = 5000
+    rate = 5.212
+    profit = cost*(rate/100)*(days/365)
+    print(profit)
+
+if __name__ == "__main__":
+    profit()

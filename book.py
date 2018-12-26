@@ -2,8 +2,9 @@
 #coding:utf-8
 #Python3
 
+from urllib.error import URLError
 from urllib.parse import quote
-import re,os,json, time, shutil,sys,sqlite3,coloredlogs,logging,argparse
+import re,os,json, time, shutil,sys,sqlite3,coloredlogs,logging,argparse,random
 from bs4 import BeautifulSoup
 from urllib.request import urlopen,Request,HTTPError,unquote
 from html.parser import HTMLParser
@@ -77,19 +78,50 @@ class mylogger(): # Version: 20181222
 #         #l.verbose('++++ Function '+self.func.__name__+' spend ' +str(elapsed)
 #         return result
 
-def open_link(URL):
-    funcname = __name__
-    l = mylogger(logfile,logfilelevel,funcname)
-    l.debug(URL)
+# def open_link(URL):
+#     funcname = __name__
+#     l = mylogger(logfile,logfilelevel,funcname)
+#     l.debug(URL)
+#     req = Request(URL,headers=headers)
+#     try:
+#         html = urlopen(req)
+#         time.sleep(3)
+#         #l.verbose(html.info())
+#         l.verbose(html.getcode())
+#     except HTTPError as e:
+#         l.error(e) #5xx,4xx
+#     return html
+
+def op_simple(URL): # use built-in
+    headers = {
+        "Accept":"text/html,application/xhtml+xml,application/xml; " \
+            "q=0.9,image/webp,*/*;q=0.8",
+        "Accept-Encoding":"text/html",
+        "Accept-Language":"en-US,en;q=0.8,zh-CN;q=0.6,zh;q=0.4,zh-TW;q=0.2",
+        "Content-Type":"application/x-www-form-urlencoded",
+        # "User-Agent":"Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.36 "\
+        #     "(KHTML, like Gecko) Chrome/32.0.1700.77 Safari/537.36",
+        "User-Agent":"Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36",
+        }
     req = Request(URL,headers=headers)
     try:
         html = urlopen(req)
-        time.sleep(3)
+        time.sleep(random.uniform(2,4))
         #l.verbose(html.info())
-        l.verbose(html.getcode())
+        #l.debug(html.getcode())
+        status = html.getcode()
     except HTTPError as e:
-        l.error(e) #5xx,4xx
-    return html
+        status = e #5xx,4xx
+        html = 0
+    except URLError as e:
+        print('Host no response, try again')
+        time.sleep(30)
+        try:
+            html = urlopen(req)
+        except:
+            status = e 
+            html = 0
+    return html,status #return array object
 
 def modificate(text):
     funcname = __name__
@@ -199,7 +231,7 @@ def find_book_ver(qweb,book):
     l = mylogger(logfile,logfilelevel,funcname) 
     try:
         global version,num
-        html = open_link(qweb)
+        html = op_simple(qweb)[0]
         bsObj = BeautifulSoup(html,"html.parser")
         nobook = bsObj.find_all(string=re.compile("对不起"))
         if nobook: # not find any book
@@ -253,7 +285,7 @@ def find_other_lib(v):
         #l.info(bookname["title"])
         T = 20
         while T != 0:  #find other library
-            html = open_link(v)
+            html = op_simple(v)[0]
             bsObj = BeautifulSoup(html,"html.parser")
             other = bsObj.find("input",{"value":"其它馆址"})
             l.verbose(other)
@@ -270,7 +302,7 @@ def find_other_lib(v):
             l.debug(other_lib)
             link.add(other_lib)
             #go to other_lib
-            bsObj = BeautifulSoup(open_link(other_lib),"html.parser")
+            bsObj = BeautifulSoup(op_simple(other_lib)[0],"html.parser")
             # find more page of other lib
             lk = bsObj.find_all(href=re.compile("staffonly=$"))
             for i in lk :  link.add(i["href"])
@@ -351,7 +383,7 @@ def single(book):
     l.debug("all link find below")
     for lib in link:
         l.debug(lib)
-        bsObj = BeautifulSoup(open_link(lib),"html.parser")
+        bsObj = BeautifulSoup(op_simple(lib)[0],"html.parser")
         find_library(bsObj,book)
 
 def main():
@@ -415,11 +447,14 @@ def main():
 
 
 if __name__=='__main__':
-    main()
-
+    try:
+        main()
+    except KeyboardInterrupt:
+        print('ctrl + c')
 
 """
 Changelog:
+2018.12.25 add keyinterrupt v2.3
 2018.12.24 use argparse,prettytable v2.2
 2018.1.15 add DB class v2.1
 2018.1.13 fix log bug, optimize DB query v2.0
