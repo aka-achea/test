@@ -63,7 +63,14 @@ class mylogger(): # Version: 20181222
     def critical(self,msg):  
         self.logger.critical(msg)
     def verbose(self,msg):     
-        self.logger.debug(msg)
+        try:
+            self.logger.debug(msg)
+        except UnicodeEncodeError as e:
+            print(e)
+            if '\xa0' in list(e):
+                print('ga') 
+
+
 
 
 # class dec: # tracer

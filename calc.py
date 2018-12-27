@@ -16,9 +16,9 @@ def airticket():
     pass
 
 def profit():
-    days = 14
-    cost = 5000
-    rate = 5.212
+    days = 5
+    cost = 30000
+    rate = 9.2
     profit = cost*(rate/100)*(days/365)
     print(profit)
 
