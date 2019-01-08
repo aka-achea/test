@@ -4,13 +4,16 @@
 
 
 from PIL import Image
-import pytesseract,math,os
+import pytesseract,math,os ,csv,codecs
 from prettytable import PrettyTable 
 
 pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe"
 
 path = 'e:\\jj'
+cf = r'e:\j.csv'
 threshold = 189
+
+
 tdir = os.path.join(path,'t')
 # box = (0,300,655,1230)
 box1 = (0,300,655,530)
@@ -85,15 +88,23 @@ def readimg(path,threshold):
     return ddict
 
 
-print('threshold '+str(threshold))
+# print('threshold '+str(threshold))
 ddict = readimg(path,threshold)
-formattable(ddict)
+# formattable(ddict)
+
+with open(cf,'w',newline='',encoding='utf-8-sig') as c:
+    writer = csv.writer(c)
+    for i in range(len(ddict)):
+        writer.writerow(ddict[i+1])
 
 # n = math.floor(/3)
 # ddict = format_data(dlist)
 
+
+
 """
 change log
+2018.1.8 add csv output v1.2
 2018.1.4 add pretty table v1.1
 2018.1.3 build core function v1.0
 

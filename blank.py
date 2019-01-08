@@ -7,40 +7,18 @@ import urllib,shutil,coloredlogs,logging
 
 from PIL import Image
 import pytesseract,math
-
-img = 'e:\\t.jpg'
-out = 'e:\\n.jpg'
-
-im = Image.open(img)
-im = im.convert('L')
-
-
-def initTable(threshold=140):
-    table = []
-    for i in range(256):
-        if i < threshold:
-            table.append(0)
-        else:
-            table.append(1)
-    return table
-
-ni = im.point(initTable(195),'1')
-ni.save(out,'jpeg')
-
-# img = 'e:\\n140.jpg'
-
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe"
-t = pytesseract.image_to_string(Image.open(out),lang='chi_sim')
+import codecs
 
 
 
-get = []
-t = t.split('\n')
-for i in t:
-    if i != '' and i != ' ':
-        # print(i.strip())
-        get.append(i)
+f = codecs.open('e:/intimate.txt','a','utf-8')#这里表示把intimate.txt文件从utf-8编码转换为unicode，就可以对其进行unicode读写了
+f.write(u'中文')#直接写入unicode
+s = '中文'
+f.write(s.decode('gbk'))#先把gbk的s解码成unicode然后写入文件
+f.close()
 
-print(get)
-# # n = math.floor(len(get)/3)
-
+f = codecs.open('e:/intimate.txt','r','utf-8')
+s = f.readlines()
+f.close()
+for line in s:
+    print(line.encode('gbk'))

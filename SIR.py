@@ -1,15 +1,10 @@
 #!/usr/bin/python
 #coding:utf-8
 
-import time,os
+import time,os,sys
 from docx import Document
 from docx.shared import Inches
 import comtypes.client
-
-# name = 'ggggg'
-# SN =  'sgeserger'
-# site = 'Singapore'
-# loc = 'IDX2/A24/GSHFRB024A2/Bay79'
 
 name = input('Server Name >> ')
 SN = input('Serial Number >> ')
@@ -17,8 +12,9 @@ site = input('Press Enter for default Shanghai >> ')
 if site == '': site = 'Shanghai'
 loc = input('eg:IDX2/A24/GSHFRB024A2/Bay7 >>> ')
 
-SIR = 'E:\\UT\\SIR Blade.docx'
-out_file = r'E:\UT\%s.pdf' % name
+
+SIR = 'SIR Blade.docx'
+out_file = '%s.pdf' % name
 
 """
 Serial Number:          6CU830G700
