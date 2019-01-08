@@ -1,20 +1,32 @@
 #!/usr/bin/python
 #coding:utf-8
 
-import smtplib, configparser, os
+import smtplib, configparser, os ,sys
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email.mime.text import MIMEText
 from email import encoders
 
 
+
 confile = 'E:\\mail.ini'
 # choice = 'KC2'
+config = configparser.ConfigParser()
+config.read(confile)
+
 choice = input("Which place ?")
 choice = choice.upper()
 
-config = configparser.ConfigParser()
-config.read(confile)
+
+if choice == 'KC2' or choice == 'K':
+    choice == 'KC2'
+elif choice == 'NTT' or choice == 'N':
+    choice == 'NTT'
+else:
+    print('Wrong input')
+    sys.exit()
+
+
 
 mailsvr = config['mailsvr']['mailsvr']
 fromaddr = config[choice]['fromaddr']
@@ -30,7 +42,8 @@ msg['To'] = ", ".join(toaddr)
 msg['Subject'] = config[choice]['title']
 msg.attach(MIMEText(body,'plain'))
 
-if choice == 'KC2':
+if choice == 'KC2' or choice == 'K':
+    choice == 'KC2'
     attach = config[choice]['attach']
     # print(attach)
     with open(attach,'rb') as fo:
