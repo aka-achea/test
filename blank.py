@@ -96,15 +96,26 @@ if __name__=='__main__': #Usage
 
     import functools
     logfile = 'E:\\app.log'
-    def log(func):
-        @functools.wraps(func)
-        def wrapper(*args, **kw):
-            global l
-            l = mylogger(logfile,func.__name__)
-            return func(*args, **kw)
-        return wrapper
+    # def log(func):
+    #     @functools.wraps(func)
+    #     def wrapper(*args, **kw):
+    #         global l
+    #         l = mylogger(logfile,func.__name__)
+    #         return func(*args, **kw)
+    #     return wrapper
 
-    @log
+    def log(logfile):
+        def decorator(func):
+            @functools.wraps(func)
+            def wrapper(*args, **kw):
+                global l
+                l = mylogger(logfile,func.__name__)
+                return func(*args, **kw)
+            return wrapper
+        return decorator
+
+    
+    @log(logfile)
     def logtest():
         l.info("gesge")
         l.info(get_current_function_name())
