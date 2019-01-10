@@ -26,7 +26,6 @@ import codecs
 import logging,coloredlogs
 import inspect
 
-#testeeeeg
 
 def get_current_function_name():
     return inspect.stack()[1][3]
