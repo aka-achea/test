@@ -7,7 +7,7 @@ import urllib,shutil,coloredlogs,logging
 
 from PIL import Image
 import pytesseract,math
-import codecs
+import codecs,fnmatch
 
 
 #!/usr/bin/python
@@ -314,22 +314,35 @@ def printYellowRed(mess):
  
 if __name__ == '__main__':
  
-    print
-    printDarkBlue('printDarkBlue:暗蓝色文字')
-    printDarkGreen(u'printDarkGreen:暗绿色文字\n'.encode('gb2312'))
-    printDarkSkyBlue(u'printDarkSkyBlue:暗天蓝色文字\n'.encode('gb2312'))
-    printDarkRed(u'printDarkRed:暗红色文字\n'.encode('gb2312'))
-    printDarkPink(u'printDarkPink:暗粉红色文字\n'.encode('gb2312'))
-    printDarkYellow(u'printDarkYellow:暗黄色文字\n'.encode('gb2312'))
-    printDarkWhite(u'printDarkWhite:暗白色文字\n'.encode('gb2312'))
-    printDarkGray(u'printDarkGray:暗灰色文字\n'.encode('gb2312'))
-    printBlue(u'printBlue:蓝色文字\n'.encode('gb2312'))
-    printGreen(u'printGreen:绿色文字\n'.encode('gb2312'))
-    printSkyBlue(u'printSkyBlue:天蓝色文字\n'.encode('gb2312'))
-    printRed(u'printRed:红色文字\n'.encode('gb2312'))
-    printPink(u'printPink:粉红色文字\n'.encode('gb2312'))
-    printYellow(u'printYellow:黄色文字\n'.encode('gb2312'))
-    printWhite(u'printWhite:白色文字\n'.encode('gb2312')) 
-    printWhiteBlack(u'printWhiteBlack:白底黑字输出\n'.encode('gb2312'))
-    printWhiteBlack_2(u'printWhiteBlack_2:白底黑字输出（直接传入16进制参数）\n'.encode('gb2312'))
-    printYellowRed(u'printYellowRed:黄底红字输出\n'.encode('gb2312'))
+    # print
+    # printDarkBlue('printDarkBlue:暗蓝色文字')
+    # printDarkGreen(u'printDarkGreen:暗绿色文字\n'.encode('gb2312'))
+    # printDarkSkyBlue(u'printDarkSkyBlue:暗天蓝色文字\n'.encode('gb2312'))
+    # printDarkRed(u'printDarkRed:暗红色文字\n'.encode('gb2312'))
+    # printDarkPink(u'printDarkPink:暗粉红色文字\n'.encode('gb2312'))
+    # printDarkYellow(u'printDarkYellow:暗黄色文字\n'.encode('gb2312'))
+    # printDarkWhite(u'printDarkWhite:暗白色文字\n'.encode('gb2312'))
+    # printDarkGray(u'printDarkGray:暗灰色文字\n'.encode('gb2312'))
+    # printBlue(u'printBlue:蓝色文字\n'.encode('gb2312'))
+    # printGreen(u'printGreen:绿色文字\n'.encode('gb2312'))
+    # printSkyBlue(u'printSkyBlue:天蓝色文字\n'.encode('gb2312'))
+    # printRed(u'printRed:红色文字\n'.encode('gb2312'))
+    # printPink(u'printPink:粉红色文字\n'.encode('gb2312'))
+    # printYellow(u'printYellow:黄色文字\n'.encode('gb2312'))
+    # printWhite(u'printWhite:白色文字\n'.encode('gb2312')) 
+    # printWhiteBlack(u'printWhiteBlack:白底黑字输出\n'.encode('gb2312'))
+    # printWhiteBlack_2(u'printWhiteBlack_2:白底黑字输出（直接传入16进制参数）\n'.encode('gb2312'))
+    # printYellowRed(u'printYellowRed:黄底红字输出\n'.encode('gb2312'))
+
+    with open(r'H:\av.txt','w',encoding='utf-8') as f:
+        for dirpath, dirnames, files in os.walk('F:'):
+            for name in files:
+                name = name.lower()
+                a = 0
+                for e in ['*.jpg','*.jpeg','*.torrent','*.srt','*.htm']:
+                    if fnmatch.fnmatch(name,e):
+                        a = 1
+                if a != 1:
+                    p = os.path.join(dirpath,name)
+                    s = str(os.path.getsize(p))
+                    f.write(p +' - '+s+'\n')
