@@ -31,7 +31,7 @@ def get_funcname():
     mo = str(inspect.stack()[1][1]).split('/')[-1].split('.')[0]
     mf = mo+'.'+func
 
-    lineno = (inspect.stack()[1][2])
+    lineno = inspect.stack()[1][2]
     print(lineno)
 
     return mf
