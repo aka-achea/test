@@ -280,6 +280,6 @@ else:
 
 """
 Changelog:
-2017.8.22 basic query funtion for exhibition v1.0
 2018.1.2 add music function v1.1
+2017.8.22 basic query funtion for exhibition v1.0
 """
