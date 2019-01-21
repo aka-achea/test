@@ -32,10 +32,6 @@ e_link = ""
 e_cover = ""
 event_link_list = set()
 workfolder = "D:\douban"
-try:
-    os.mkdir(workfolder)
-except:
-    pass    
 os.chdir(workfolder)
 
 """Color Theme"""
