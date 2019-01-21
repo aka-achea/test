@@ -2,23 +2,32 @@
 #coding:utf-8
 #Python3
 
-from urllib.parse import quote
-import re,os,json, time, wget,shutil,sys,sqlite3,requests
+# from urllib.parse import quote
+import os,sqlite3,requests,argparse
 from bs4 import BeautifulSoup
-from urllib.request import urlopen,Request,HTTPError,unquote
-from html.parser import HTMLParser
-from colorama import init, Fore, Back, Style
+# from urllib.request import urlopen,Request,HTTPError,unquote
+# from html.parser import HTMLParser
+# from colorama import init, Fore, Back, Style
+
+# customized module
+from mylog import mylogger,get_funcname
+from openlink import op_simple
+
+logfilelevel = 10
+logfile = 'db.log'
+workfolder = "E:\douban"
+os.chdir(workfolder)
 
 headers = {
     "Accept":"text/html,application/xhtml+xml,application/xml; " \
         "q=0.9,image/webp,*/*;q=0.8",
     "Accept-Encoding":"text/html",
-    "Accept-Language":"en-US,en;q=0.8,zh-CN;q=0.6,zh;q=0.4,zh-TW;q=0.2",
+    "Accept-Language":"en-US,en;q= 0.8,zh-CN;q=0.6,zh;q=0.4,zh-TW;q=0.2",
     "Content-Type":"application/x-www-form-urlencoded",
     "User-Agent":"Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.36 "\
         "(KHTML, like Gecko) Chrome/32.0.1700.77 Safari/537.36"
 }
-loglevel = 0
+
 
 exh = "https://shanghai.douban.com/events/week-exhibition"
 mus = 'https://shanghai.douban.com/events/week-music'
@@ -31,47 +40,6 @@ e_cost = ""
 e_link = ""
 e_cover = ""
 event_link_list = set()
-workfolder = "D:\douban"
-os.chdir(workfolder)
-
-"""Color Theme"""
-init(autoreset=True)
-class Colored(object):
-    #  前景色:红色  背景色:默认
-    def warning(self, s):
-        s = str(s)
-        return Fore.RED + Style.BRIGHT + s + Fore.RESET
-    #  前景色:绿色  背景色:默认
-    def info(self, s):
-        s = str(s)
-        return Fore.GREEN + Style.BRIGHT + s + Fore.RESET
-    #  前景色:黄色  背景色:默认
-    def verbose(self, s):
-        s = str(s)
-        return Fore.YELLOW + Style.BRIGHT + s + Fore.RESET
-    def debug(self, s):
-        s = str(s)
-        return Fore.YELLOW + Style.BRIGHT + Back.CYAN + s + Fore.RESET + Back.RESET
-color = Colored()
-"""Color Theme"""
-
-def open_link(URL):
-    if loglevel == 1 or loglevel == 2:
-        print(color.verbose(">>>>Enter open_link()"))
-    if loglevel == 2:
-        print(color.debug(URL))
-    req = Request(URL,headers=headers)
-    try:
-        html = urlopen(req)
-        #time.sleep(3)
-        #print(color.verbose(html.info()))
-        if loglevel == 1 or loglevel == 2:
-            print(color.verbose(html.getcode()))
-    except HTTPError as e:
-        print(color.warning(e)) #5xx,4xx
-    if loglevel == 1 or loglevel == 2:
-        print(color.verbose("<<<<Exit open_link()"))
-    return html
 
 def download(file_url, file_name):
     # open in binary mode
@@ -82,8 +50,9 @@ def download(file_url, file_name):
         file.write(response.content)
 
 def modificate(text):
+    l = mylogger(logfile,logfilelevel,get_funcname()) 
     #file_name = re.sub(r'\s*:\s*', u' - ', file_name)    # for FAT file system
-    if loglevel == 1 or loglevel == 2: before = text
+    before = text
     text = text.replace('?', u'？')      # for FAT file system
     text = text.replace('/', u'／')
     text = text.replace('|', '')
@@ -98,71 +67,55 @@ def modificate(text):
     #text = text.replace('\'', u'＇')
     text = text.strip()
     #file_name = file_name.replace('$', '\\$')    # for command, see issue #7
-    if loglevel == 1 or loglevel == 2:
-        after = text
-        if before == after :
-            pass
-        else:
-            print(color.verbose("Before modify: "+before))
-            print(color.verbose("After modify: "+after))
+    after = text
+    if before != after :
+        l.debug("Before modify: "+before)
+        l.debug("After modify: "+after)
     return text
 
-
 def get_page_list(url):
-    if loglevel == 1 or loglevel == 2 :
-        print(color.verbose(">>>>Entering get_page_list()"))
-        print(color.verbose("Scan page:"))
-        print(color.verbose(url))
+    l = mylogger(logfile,logfilelevel,get_funcname()) 
     page_list = set()
     err = 0
     next_page = ""
     while err == 0:
         try:
             link = url + next_page
-            if loglevel == 1 or loglevel == 2 :print(link)
-            bsObj = BeautifulSoup(open_link(link),"html.parser") #;print(bsObj)
+            l.debug(link)
+            bsObj = BeautifulSoup(op_simple(link)[0],"html.parser") #;print(bsObj)
             next_page = bsObj.find("span",{"class":"next"}).link["href"]
             page_list.add(link)
-            if loglevel == 2 :print(next_page)
+            l.debug(next_page)
         except:
             err = 1
             link = url + next_page
             page_list.add(link)
-            print(color.info("End of page list"))
-    if loglevel == 1 or loglevel == 2:
-        print(color.verbose("Page list:"))
-        for i in page_list: print(color.verbose(i))
-        print(color.verbose("<<<<Exit get_page_list()"))
+            l.info("End of page list")
+    l.debug("Page list >>>>")
+    l.debug(page_list)
     return page_list
 
 def get_event_in_page(page):
-    if loglevel == 1 or loglevel == 2 :
-        print(color.verbose(">>>>Entering get_event_in_page()"))
-        print(color.verbose("Analyzing event link from page:"))
-        print(color.verbose(page))
+    l = mylogger(logfile,logfilelevel,get_funcname()) 
     try:
         global event_link_list
-        bsObj = BeautifulSoup(open_link(page),"html.parser") #;print(bsObj)
+        bsObj = BeautifulSoup(op_simple(page)[0],"html.parser") #;print(bsObj)
         list_entry = bsObj.find_all("div",{"class":"pic"})
-        for l in list_entry:
-            event = l.a["href"]
-            event_link_list.add(event)
+        for i in list_entry:
+            event_link = i.a["href"]
+            # l.debug(event_link)
+            event_link_list.add(event_link)
     except AttributeError as e:
-        print(e)
-    if loglevel == 1 or loglevel == 2:
-        print(color.verbose("Event in this page:"))
-        for i in event_link_list: print(color.verbose(i))
-        print(color.verbose("<<<<Exit get_event_in_page()"))
+        l.warning(e)
+    # l.debug("Event link in this page:")
+    # l.debug(event_link_list)
     return event_link_list
 
 def get_event_detail(event):
-    if loglevel == 1 or loglevel == 2 :
-        print(color.verbose(">>>>Entering get_event_detail()"))
-        print(color.verbose("Analyzing event detail from page:"))
-        print(color.verbose(event))
+    l = mylogger(logfile,logfilelevel,get_funcname()) 
     global e_title,e_time,e_cost,e_place,e_link
     try:
-        bsObj = BeautifulSoup(open_link(event),"html.parser") #;print(bsObj)
+        bsObj = BeautifulSoup(op_simple(event)[0],"html.parser") #;print(bsObj)
         e_link = event
         e_title = bsObj.find("h1",{"itemprop":"summary"}).text.strip()
         e_title = e_title.replace('官方售票','').strip()
@@ -174,35 +127,31 @@ def get_event_detail(event):
         e_cost = bsObj.find("span",{"itemprop":"ticketAggregate"}).text[3:].strip()
         e_cover = bsObj.find("div",{"class":"poster"}).a["href"]
         e_id = e_link.split('/')[-2]
-        if loglevel == 1 or loglevel == 2 :
-            print(color.verbose("ID："+e_id))
-            print(color.verbose("展览："+e_title))
-            print(color.verbose("时间："+e_time))
-            print(color.verbose("地点："+e_place))
-            print(color.verbose("费用："+e_cost))
-            print(color.verbose("链接："+e_link))
-            print(color.verbose("封面："+e_cover))
-
+        l.debug("ID："+e_id)
+        l.debug("展览："+e_title)
+        l.debug("时间："+e_time)
+        l.debug("地点："+e_place)
+        l.debug("费用："+e_cost)
+        l.debug("链接："+e_link)
+        l.debug("封面："+e_cover)
         download(e_cover, modificate(e_title)+".jpg")
         conn = sqlite3.connect('douban.db')
         cursor = conn.cursor()
         try:
             cursor.execute("insert into show values (?,?,?,?,?)",(e_id,e_title,e_place,e_time,e_cost))
         except sqlite3.IntegrityError as e:
-            if loglevel == 1 or loglevel == 2 : print(color.verbose(e))
-            print(color.warning("Duplicate: "+e_id+" "+e_title))
+            l.debug(e)
+            l.warning("Duplicate: "+e_id+" "+e_title)
         cursor.close()
         conn.commit()
         conn.close()
-
     except AttributeError as e:
-        print(e)
-    if loglevel == 1 or loglevel == 2:
-        print(color.verbose("Event in this page:"))
-        #for i in event_link: print(color.verbose(i))
-        print(color.verbose("<<<<Exit get_event_detail()"))
+        l.warning(e)
+    l.debug("Event in this page:" + e_title)
+    # l.debug(event_link)
 
 def create_db(db):
+    l = mylogger(logfile,logfilelevel,get_funcname()) 
     conn = sqlite3.connect(db)
     cursor = conn.cursor()
     try:
@@ -210,13 +159,12 @@ def create_db(db):
                         title varchar(40),place varchar(50),\
                         time varchar(20),cost varchar(20) )' )
     except sqlite3.OperationalError as e:
-        print(color.warning(e))
+        l.warning(e)
     cursor.close()
     conn.close()
 
 def query_db(q):
-    if loglevel == 1 or loglevel == 2:
-        print(color.verbose(">>>>Enter query_db()"))
+    l = mylogger(logfile,logfilelevel,get_funcname()) 
     conn = sqlite3.connect(db)
     cursor = conn.cursor()
     if q == 's':
@@ -226,60 +174,71 @@ def query_db(q):
         cursor.execute('select ID,title from show')
     elif q == 'id':
         cursor.execute('select ID,title,time,place,cost from show')
-
-
     values = cursor.fetchall()
-    for i in values: print(i)
+    for i in values: l.info(i)
     cursor.close()
     conn.close()
-    if loglevel == 1 or loglevel == 2:
-        print(color.verbose("<<<<Exit query( )"))
 
-if sys.argv[-1] == 'v':
-    print(color.verbose("Enable verbose log"))
-    loglevel = 1
-elif sys.argv[-1] == 'vv':
-    print(color.verbose("Enable debug log"))
-    loglevel = 2
+   
+def main():
+    l = mylogger(logfile,logfilelevel,get_funcname()) 
+    parser = argparse.ArgumentParser(description = 'douban search tool')
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('-s','--show',help='Search show event',choices=['n','q'])
+    group.add_argument('-m','--music',help='Search music event',choices=['n','q'])
+    group.add_argument('-c','--clean',help='Clean database',action='store_true')
+    parser.add_argument("-v", "--verbosity",action="count",default=0,help="increase output verbosity")
+    args = parser.parse_args()
 
 
-if sys.argv[1] == 'show':
-    if sys.argv[2] == 'u':
-        create_db(db)
-        page_list = get_page_list(exh)
+    def ana_douban(web):
+        page_list = get_page_list(web)
         for page in page_list:
-            event_link = get_event_in_page(page)
-        for event in event_link:
-            #print(event)
+            l.debug('Analyze page: '+page)
+            event_link_list = get_event_in_page(page)        
+        for event in event_link_list:
+            l.debug(event)
             get_event_detail(event)
-    elif sys.argv[2] == 'q':
-        if sys.argv[3] == 'a':
-            query_db('a')
-        elif sys.argv[3] == 's':
-            query_db('s')
-    else:
-        print(color.warning("SHOW WHAT"))
-elif sys.argv[1] == 'music':
-    if sys.argv[2] == 'u':
+
+    if args.show == 'n':
+        l.info('Search new show event')
         create_db(db)
-        page_list = get_page_list(mus)
-        for page in page_list:
-            event_link = get_event_in_page(page)
-        for event in event_link:
-            #print(event)
-            get_event_detail(event)
-    elif sys.argv[2] == 'q':
-        if sys.argv[3] == 'a':
-            query_db('a')
-        elif sys.argv[3] == 's':
-            query_db('s')
+        ana_douban(exh)
+
+    elif args.show == 'q':
+        l.info('Query show event')
+        query_db('a')
+
+    elif args.music == 'n':
+        l.info('Search new music event')
+        create_db(db)
+        ana_douban(mus)
+        # page_list = get_page_list(mus)
+        # for page in page_list:
+        #     l.debug('Analyze page: '+page)
+        #     event_link_list = get_event_in_page(page)
+        # for event in event_link_list:
+        #     #print(event)
+        #     get_event_detail(event)        
+        
+    elif args.music == 'q':
+        l.info('Query music event')
+        query_db('a')
+
+    elif args.clean:
+        pass
+
     else:
-        print(color.warning("SHOW WHAT"))
-else:
-    pass
+        parser.print_help()
+
+
+if __name__=='__main__':
+    main()
+
 
 """
 Changelog:
+2019.1.21 use argparser,mylogger v1.2
 2018.1.2 add music function v1.1
 2017.8.22 basic query funtion for exhibition v1.0
 """
