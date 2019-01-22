@@ -65,4 +65,8 @@ def sir():
     word.Quit()
 
 if __name__=='__main__':
-    sir()
+    try:
+        sir()
+    except KeyboardInterrupt:
+        print('ctrl + c')
+

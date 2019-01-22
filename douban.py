@@ -179,7 +179,17 @@ def query_db(q):
     cursor.close()
     conn.close()
 
-   
+  
+def ana_douban(web):
+    l = mylogger(logfile,logfilelevel,get_funcname()) 
+    page_list = get_page_list(web)
+    for page in page_list:
+        l.debug('Analyze page: '+page)
+        event_link_list = get_event_in_page(page)        
+    for event in event_link_list:
+        l.debug(event)
+        get_event_detail(event) 
+
 def main():
     l = mylogger(logfile,logfilelevel,get_funcname()) 
     parser = argparse.ArgumentParser(description = 'douban search tool')
@@ -189,15 +199,6 @@ def main():
     group.add_argument('-c','--clean',help='Clean database',action='store_true')
     parser.add_argument("-v", "--verbosity",action="count",default=0,help="increase output verbosity")
     args = parser.parse_args()
-
-    def ana_douban(web):
-        page_list = get_page_list(web)
-        for page in page_list:
-            l.debug('Analyze page: '+page)
-            event_link_list = get_event_in_page(page)        
-        for event in event_link_list:
-            l.debug(event)
-            get_event_detail(event)
 
     if args.show == 'n':
         l.info('Search new show event')
@@ -211,14 +212,7 @@ def main():
     elif args.music == 'n':
         l.info('Search new music event')
         create_db(db)
-        ana_douban(mus)
-        # page_list = get_page_list(mus)
-        # for page in page_list:
-        #     l.debug('Analyze page: '+page)
-        #     event_link_list = get_event_in_page(page)
-        # for event in event_link_list:
-        #     #print(event)
-        #     get_event_detail(event)        
+        ana_douban(mus)    
         
     elif args.music == 'q':
         l.info('Query music event')
@@ -232,7 +226,11 @@ def main():
 
 
 if __name__=='__main__':
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print('ctrl + c')
+
 
 
 """

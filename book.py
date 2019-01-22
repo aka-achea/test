@@ -397,10 +397,11 @@ def main():
     funcname = __name__
     l = mylogger(logfile,logfilelevel,funcname) 
     parser = argparse.ArgumentParser(description = 'Library search tool')
-    parser.add_argument('-s','--single',help='Search single book ')
-    parser.add_argument('-m','--multiple',help='Search multiple books',action='store_true')
-    parser.add_argument('-c','--clean',help='Clean database',action='store_true')
-    parser.add_argument('-qa',help='Query all find',action='store_true')
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('-s','--single',help='Search single book ')
+    group.add_argument('-m','--multiple',help='Search multiple books',action='store_true')
+    group.add_argument('-c','--clean',help='Clean database',action='store_true')
+    group.add_argument('-q',help='Query all|libary|single book|best',choices=['a','l','s','b'])
     parser.add_argument('-ql',help='Query one library')
     parser.add_argument('-qs',help='Query one book')
     parser.add_argument('-qb',help='Query best library',action='store_true')
@@ -423,27 +424,27 @@ def main():
         r = db()
         r.create()
 
-    elif args.qa == True:
+    elif args.q == 'a':
         l.info('all find')
         r = db()
         v = r.all()
         l.info(v.get_string(fields = ['图书馆','书','SN','索书号']))
 
-    elif args.qs:
-        book = args.qs
+    elif args.q == 's':
+        book = input('>>')
         l.info('Search : '+book)
         r = db()
         v = r.book(book)
         l.info(v.get_string(fields = ['图书馆','索书号']))
 
-    elif args.ql:
-        lib = args.ql
-        print(lib)
+    elif args.q == 'l':
+        lib = input('>>')
+        l.info(lib)
         r = db()
         v = r.lib(lib)
         l.info(v.get_string(fields = ['图书','索书号']))
 
-    elif args.qb == True:
+    elif args.q == 'b':
         # print('best')
         r = db()
         v = r.sum()
@@ -461,6 +462,7 @@ if __name__=='__main__':
 
 """
 Changelog:
+2019.1.22 optimize argparse v2.4
 2018.12.25 add keyinterrupt v2.3
 2018.12.24 use argparse,prettytable v2.2
 2018.1.15 add DB class v2.1
