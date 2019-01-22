@@ -4,13 +4,13 @@
 
 import openpyxl
 
-s = r'C:\D\GitHub\test\s.txt'
-xl = r'C:\D\GitHub\test\stock.xlsx'
+s = r'D:\Profile\Desktop\wt.txt'
+xl = r'J:\DOC\我的坚果云\newstock.xlsx'
 
 
 def readtransaction(s):
     with open(s,'r') as f:
-        a = f.readlines()[3:]
+        a = f.readlines()[3:] 
         # a = a[3:]
         t = {}
         n = 0
