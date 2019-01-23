@@ -10,6 +10,9 @@ from urllib.request import urlopen,Request,HTTPError,unquote
 from html.parser import HTMLParser
 from prettytable import PrettyTable , from_db_cursor
 
+# customized module
+from mylog import mylogger,get_funcname
+from openlink import op_simple
 
 headers = {
     "Accept":"text/html,application/xhtml+xml,application/xml; " \
@@ -36,39 +39,39 @@ blacklist = masterpath+'blacklistlib.txt'
 QueryURL = "http://ipac.library.sh.cn/ipac20/ipac.jsp?menu=search&aspect=basic_search&profile=sl&ri=&index=.TW&term="
 
 
-class mylogger(): # Version: 20181222
-    def __init__(self,logfile,logfilelevel,funcname):
-        self.funcname = funcname
-        logging.basicConfig(level=logfilelevel,filename=logfile,filemode='w',
-                            datefmt='%m-%d %H:%M:%S',
-                            format='%(asctime)s <%(name)s>[%(levelname)s] %(message)s')
-        self.logger = logging.getLogger(funcname)
-        coloredlogs.DEFAULT_LEVEL_STYLES= {
-                                        #'debug': {'color': 'magenta','bold': True},
-                                        'info': {'color': 'green','bold': True},
-                                        'warning': {'color': 'yellow','bold': True},
-                                        'error': {'color': 'red','bold': True},
-                                        'critical': {'color': 'magenta','bold': True}
-                                            }
-        coloredlogs.DEFAULT_LOG_FORMAT = '%(message)s'
-        coloredlogs.install(level='info',logger=self.logger)  
-    def debug(self,msg):
-        self.logger.debug(msg)
-    def info(self,msg):
-        self.logger.info(msg)
-    def warning(self,msg):      
-        self.logger.warning(msg)
-    def error(self,msg):      
-        self.logger.error(msg)
-    def critical(self,msg):  
-        self.logger.critical(msg)
-    def verbose(self,msg):     
-        try:
-            self.logger.debug(msg)
-        except UnicodeEncodeError as e:
-            print(e)
-            if '\xa0' in list(e):
-                print('ga') 
+# class mylogger(): # Version: 20181222
+#     def __init__(self,logfile,logfilelevel,funcname):
+#         self.funcname = funcname
+#         logging.basicConfig(level=logfilelevel,filename=logfile,filemode='w',
+#                             datefmt='%m-%d %H:%M:%S',
+#                             format='%(asctime)s <%(name)s>[%(levelname)s] %(message)s')
+#         self.logger = logging.getLogger(funcname)
+#         coloredlogs.DEFAULT_LEVEL_STYLES= {
+#                                         #'debug': {'color': 'magenta','bold': True},
+#                                         'info': {'color': 'green','bold': True},
+#                                         'warning': {'color': 'yellow','bold': True},
+#                                         'error': {'color': 'red','bold': True},
+#                                         'critical': {'color': 'magenta','bold': True}
+#                                             }
+#         coloredlogs.DEFAULT_LOG_FORMAT = '%(message)s'
+#         coloredlogs.install(level='info',logger=self.logger)  
+#     def debug(self,msg):
+#         self.logger.debug(msg)
+#     def info(self,msg):
+#         self.logger.info(msg)
+#     def warning(self,msg):      
+#         self.logger.warning(msg)
+#     def error(self,msg):      
+#         self.logger.error(msg)
+#     def critical(self,msg):  
+#         self.logger.critical(msg)
+#     def verbose(self,msg):     
+#         try:
+#             self.logger.debug(msg)
+#         except UnicodeEncodeError as e:
+#             print(e)
+#             if '\xa0' in list(e):
+#                 print('ga') 
 
 
 
@@ -99,40 +102,39 @@ class mylogger(): # Version: 20181222
 #         l.error(e) #5xx,4xx
 #     return html
 
-def op_simple(URL): # use built-in
-    headers = {
-        "Accept":"text/html,application/xhtml+xml,application/xml; " \
-            "q=0.9,image/webp,*/*;q=0.8",
-        "Accept-Encoding":"text/html",
-        "Accept-Language":"en-US,en;q=0.8,zh-CN;q=0.6,zh;q=0.4,zh-TW;q=0.2",
-        "Content-Type":"application/x-www-form-urlencoded",
-        # "User-Agent":"Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.36 "\
-        #     "(KHTML, like Gecko) Chrome/32.0.1700.77 Safari/537.36",
-        "User-Agent":"Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36",
-        }
-    req = Request(URL,headers=headers)
-    try:
-        html = urlopen(req)
-        time.sleep(random.uniform(2,4))
-        #l.verbose(html.info())
-        #l.debug(html.getcode())
-        status = html.getcode()
-    except HTTPError as e:
-        status = e #5xx,4xx
-        html = 0
-    except URLError as e:
-        print('Host no response, try again')
-        time.sleep(30)
-        try:
-            html = urlopen(req)
-        except:
-            status = e 
-            html = 0
-    return html,status #return array object
+# def op_simple(URL): # use built-in
+#     headers = {
+#         "Accept":"text/html,application/xhtml+xml,application/xml; " \
+#             "q=0.9,image/webp,*/*;q=0.8",
+#         "Accept-Encoding":"text/html",
+#         "Accept-Language":"en-US,en;q=0.8,zh-CN;q=0.6,zh;q=0.4,zh-TW;q=0.2",
+#         "Content-Type":"application/x-www-form-urlencoded",
+#         # "User-Agent":"Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.36 "\
+#         #     "(KHTML, like Gecko) Chrome/32.0.1700.77 Safari/537.36",
+#         "User-Agent":"Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36",
+#         }
+#     req = Request(URL,headers=headers)
+#     try:
+#         html = urlopen(req)
+#         time.sleep(random.uniform(2,4))
+#         #l.verbose(html.info())
+#         #l.debug(html.getcode())
+#         status = html.getcode()
+#     except HTTPError as e:
+#         status = e #5xx,4xx
+#         html = 0
+#     except URLError as e:
+#         print('Host no response, try again')
+#         time.sleep(30)
+#         try:
+#             html = urlopen(req)
+#         except:
+#             status = e 
+#             html = 0
+#     return html,status #return array object
 
 def modificate(text):
-    funcname = __name__
-    l = mylogger(logfile,logfilelevel,funcname)    
+    l = mylogger(logfile,logfilelevel,get_funcname()) 
     #file_name = re.sub(r'\s*:\s*', u' - ', file_name)    # for FAT file system
     text = str(text)
     before = text
@@ -148,8 +150,7 @@ def modificate(text):
     return text
 
 def search_link(book):
-    funcname = __name__
-    l = mylogger(logfile,logfilelevel,funcname)     
+    l = mylogger(logfile,logfilelevel,get_funcname())   
     l.debug("Transalte to Web code")
     l.debug(quote(book))
     qweb = QueryURL+quote(book)
@@ -157,20 +158,22 @@ def search_link(book):
 
 class db():
     def create(self):
-        funcname = __name__
-        l = mylogger(logfile,logfilelevel,funcname) 
+        l = mylogger(logfile,logfilelevel,get_funcname()) 
         conn = sqlite3.connect(database)
         cursor = conn.cursor()
-        cursor.execute('create table inventory (SN varchar(20) primary key,\
-                        book varchar(20),lib varchar(20),cat varchar(20)  )' )
+        cmd = 'create table inventory (SN varchar(20) primary key,\
+                        book varchar(20),lib varchar(20),cat varchar(20)  )'
+        l.debug(cmd)
+        cursor.execute(cmd)
         cursor.close()
         conn.close()
 
     def lib(self,lib):
-        funcname = __name__
-        l = mylogger(logfile,logfilelevel,funcname)         
+        l = mylogger(logfile,logfilelevel,get_funcname())        
         conn = sqlite3.connect(database)
         cursor = conn.cursor()
+        # cmd = 
+        # l.debug(cmd)
         cursor.execute('select distinct book as 图书, cat as 索书号 from inventory \
                         where lib = ? order by book' , (lib,))
         v = from_db_cursor(cursor)
@@ -180,7 +183,7 @@ class db():
 
     def all(self):
         funcname = __name__
-        l = mylogger(logfile,logfilelevel,funcname)         
+        l = mylogger(logfile,logfilelevel,get_funcname())          
         l.info(">>>>>>>显示所有图书<<<<<<<")
         l.info("="*26)
         conn = sqlite3.connect(database)
@@ -193,7 +196,7 @@ class db():
 
     def sum(self):
         funcname = __name__
-        l = mylogger(logfile,logfilelevel,funcname)         
+        l = mylogger(logfile,logfilelevel,get_funcname())          
         l.info(">>显示书种类最多的图书馆<<")
         l.info("="*26)
         conn = sqlite3.connect(database)
@@ -207,7 +210,7 @@ class db():
 
     def book(self,book):
         funcname = __name__
-        l = mylogger(logfile,logfilelevel,funcname)         
+        l = mylogger(logfile,logfilelevel,get_funcname())          
         l.info(">>>>显示有此书的图书馆<<<<")
         l.info("="*26)
         conn = sqlite3.connect(database)
@@ -221,7 +224,7 @@ class db():
 
     def listbook(self):
         funcname = __name__
-        l = mylogger(logfile,logfilelevel,funcname)         
+        l = mylogger(logfile,logfilelevel,get_funcname())          
         l.info(">>>>显示找到的图书列表<<<<")
         l.info("="*26)
         conn = sqlite3.connect(database)
@@ -235,7 +238,7 @@ class db():
 # @dec  #return version,num
 def find_book_ver(qweb,book):
     funcname = __name__
-    l = mylogger(logfile,logfilelevel,funcname) 
+    l = mylogger(logfile,logfilelevel,get_funcname())  
     try:
         global version,num
         html = op_simple(qweb)[0]
@@ -283,7 +286,7 @@ def find_book_ver(qweb,book):
 # @dec #return other library link
 def find_other_lib(v):
     funcname = __name__
-    l = mylogger(logfile,logfilelevel,funcname)     
+    l = mylogger(logfile,logfilelevel,get_funcname())      
     try:
         global link
         #bookname = bsObj.find("a",{"class":"largeAnchor"})
@@ -328,7 +331,7 @@ def find_other_lib(v):
 # @dec
 def find_library(bsObj,book):
     funcname = __name__
-    l = mylogger(logfile,logfilelevel,funcname) 
+    l = mylogger(logfile,logfilelevel,get_funcname())  
     global D, fail
     for i in bsObj.find_all("tr",{"height":"15"}):
         status = i.td.next_sibling.next_sibling.next_sibling.text
@@ -371,7 +374,7 @@ def find_library(bsObj,book):
 # @dec
 def single(book):
     funcname = __name__
-    l = mylogger(logfile,logfilelevel,funcname) 
+    l = mylogger(logfile,logfilelevel,get_funcname())  
     l.info("搜寻图书："+book)
     #l.info("Link>> " + link)
     qweb = search_link(book)
@@ -395,7 +398,7 @@ def single(book):
 
 def main():
     funcname = __name__
-    l = mylogger(logfile,logfilelevel,funcname) 
+    l = mylogger(logfile,logfilelevel,get_funcname())  
     parser = argparse.ArgumentParser(description = 'Library search tool')
     group = parser.add_mutually_exclusive_group()
     group.add_argument('-s','--single',help='Search single book ')
