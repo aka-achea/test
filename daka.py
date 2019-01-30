@@ -21,8 +21,8 @@ def tj(wb):
     tjdic ={}
     sheet1 = wb['原始记录']  
     # sheet2 = wb['统计']
-    # for i in range(2,sheet1.max_row+1):
-    for i in range(2,60):        
+    for i in range(2,sheet1.max_row+1):
+    # for i in range(2,60):        
         name = sheet1.cell(row=i,column=1).value
         if name not in tjdic:
             tjdic[name] = {}
@@ -82,17 +82,36 @@ def cal(tjdic):
         result[name]['max'] = maxt
         result[name]['avg'] = avgt
         result[name]['sum'] = sumt
-    print(result)
+    # print(result)
     return result
 
 def winner(result):
+    print('='*15)
+    print('最晚下班排行榜')
+    print('='*15)
     maxwinner = {}
     for i in result:
         maxwinner[result[i]['max']] = i
-    print(maxwinner)
-    # for key, value in sorted(maxwinner.iteritems(), key=lambda(k,v): (v,k)):
-    #     print("%s: %s" % (key, value))
-        
+    for i in sorted(maxwinner,reverse=True):
+        print('%s : %.2f' % (maxwinner[i],i) )
+
+    print('='*15)
+    print('平均早鸟排行榜')
+    print('='*15)
+    avgwinner = {}
+    for i in result:
+        avgwinner[result[i]['avg']] = i
+    for i in sorted(avgwinner):
+        print('%s : %.2f' % (avgwinner[i],i) )
+
+    print('='*15)
+    print('最拼命榜')
+    print('='*15)
+    sumwinner = {}
+    for i in result:
+        sumwinner[result[i]['sum']] = i
+    for i in sorted(sumwinner,reverse=True):
+        print('%s : %.2f' % (sumwinner[i],i) )
 
             
 
