@@ -17,20 +17,24 @@ from PIL import ImageFont, Image, ImageDraw
 # color = (239,232,23)
 # size = 30
 
-confile = r'E:\daka\daka.ini'
+confile = 'daka.ini'
+workpath = os.path.dirname(os.path.realpath(__file__))
+confilepath = os.path.join(workpath,confile)
 config = configparser.ConfigParser()
-config.read(confile)
+config.read(confilepath)
 kq = config['setting']['kq']
 fontfile = config['setting']['fontfile']
 background = config['setting']['background']
 outwsum = config['setting']['outwsum']
 outwon = config['setting']['outwon']
 outwoff = config['setting']['outwoff']
-color = config['setting']['color']
 size = int(config['setting']['size'])
-workpath = config['setting']['workpath']
+# workpath = config['setting']['workpath']
 
-print(color)
+
+color = config['setting']['color']
+c = color.split(',')
+color = ( int(c[0]),int(c[1]),int(c[2]) )
 
 fontfilepath = os.path.join(workpath,fontfile)
 font = ImageFont.truetype(fontfile,size,encoding='utf-8')
