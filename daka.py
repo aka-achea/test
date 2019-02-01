@@ -188,7 +188,7 @@ def winnersum(result):
 def windraw(wdic,imout,title):
     im = Image.open(imageFile)
     draw = ImageDraw.Draw(im)
-    x,y = (70,50)
+    x,y = (70,50) #初始左上角的坐标
     xstep = 100
     ystep = 40
     texttile = title[0]
