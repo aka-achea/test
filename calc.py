@@ -23,4 +23,4 @@ def profit():
     print(profit)
 
 if __name__ == "__main__":
-    profit()
+    mp3calc()

@@ -9,8 +9,8 @@ from prettytable import PrettyTable
 
 pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe"
 
-path = 'e:\\jj'
-cf = r'e:\j.csv'
+path = r'M:\MyProject\JiJin'
+cf = r'M:\MyProject\JiJin\j.csv'
 threshold = 189
 
 
