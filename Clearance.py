@@ -1,5 +1,7 @@
 #!/usr/bin/python
 #coding:utf-8
+# python 3
+# tested in Win
 
 import smtplib, configparser, os ,sys
 from email.mime.multipart import MIMEMultipart

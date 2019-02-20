@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #coding:utf-8
-
+# tested in Win
 # Version: 20190109
 
 

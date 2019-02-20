@@ -1,4 +1,7 @@
 
+
+# tested in Win
+
 import openpyxl,math,re,os,configparser
 import PIL
 from PIL import ImageFont, Image, ImageDraw

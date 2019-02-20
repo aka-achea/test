@@ -1,11 +1,13 @@
-#!/usr/bin/python
-#coding:utf-8
+# !/usr/bin/python
+# coding:utf-8
+# python 3
+# tested in Win
 
-import re,subprocess,shlex,os
+import re,subprocess,os
 
 
 
-plink = 'C:\D\_Tool\plink.exe'
+plink = r'C:\D\_Tool\plink.exe'
 pcmd = r'E:\reviewenclosure\puttycmd.txt'
 enlist = r'E:\reviewenclosure\enlist.txt'
 en = r'E:\reviewenclosure\en.log'
