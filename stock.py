@@ -1,13 +1,15 @@
 #!/usr/bin/python
 #coding:utf-8
 #Python3
+# test in Win
 
 import openpyxl
 
-# s = r'D:\Profile\Desktop\wt.txt'
-s = r'C:\D\JG\我的坚果云\wt.txt'
-# xl = r'J:\DOC\我的坚果云\newstock.xlsx'
-xl = r'C:\D\JG\我的坚果云\newstock.xlsx'
+s = r'D:\Profile\Desktop\wt.txt'
+xl = r'J:\DOC\我的坚果云\stock.xlsx'
+
+# xl = r'C:\D\JG\我的坚果云\newstock.xlsx'
+# s = r'C:\D\JG\我的坚果云\wt.txt'
 
 #印花税：单向收取，卖出成交金额的千分之一（1‰）。 
 #过户费：按成交股票的金额×0.02‰收取，单位：元。双向收取（仅上海股票收取）。
@@ -37,7 +39,7 @@ def readtransaction(s):
 
 def stock(xl,t):
     wb = openpyxl.load_workbook(xl)
-    sheet = wb['tran']
+    sheet = wb['trans']
     max = sheet.max_row
     for i in range(len(t)):
         # print(t[i])                    
