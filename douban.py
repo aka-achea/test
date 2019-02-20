@@ -1,6 +1,7 @@
 #!/usr/bin/python
 #coding:utf-8
 #Python3
+# tested in win
 
 # from urllib.parse import quote
 import os,sqlite3,requests,argparse
