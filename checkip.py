@@ -1,7 +1,8 @@
-# !/usr/bin/python
-# coding:utf-8
-# python 3
-# tested in Win
+#!/usr/bin/python
+#coding:utf-8
+#python 3
+#tested in Win
+#tested in Centos
 
 
 import smtplib, configparser, os ,sys,subprocess
@@ -10,18 +11,19 @@ import smtplib, configparser, os ,sys,subprocess
 from email.mime.text import MIMEText
 # from email import encoders
 
-
-record = r'e:\pubip'
-
+if sys.platform == 'win32':
+    record = r'e:\pubip'
+    confile = r'C:\D\GitHub\test\mail.ini'
+else:
+    record = r'/job/pubip'
+    confile = r'/job/mail.ini'
 
 def getpubip():
     cmd = 'curl ifconfig.me'
-    newip = subprocess.run(cmd)
+    newip = subprocess.run(['curl','ifconfig.me','>',record])
     return newip
 
-def sendmsg(newip):
-
-    confile = r'C:\D\GitHub\test\mail.ini'
+def sendmsg(newip,confile):
     config = configparser.ConfigParser()
     config.read(confile)
     mailsvr = config['mailsetting']['mailsvr']
@@ -30,14 +32,12 @@ def sendmsg(newip):
     user = config['mailsetting']['user']
     passwd = config['mailsetting']['pass']
     body = newip
-
-    print(mailsvr)
+    # print(mailsvr)
 
     msg = MIMEText(body,'plain','utf-8')
     msg['From'] = fromaddr
     msg['To'] = toaddr
     msg['Subject'] = 'Public IP Change'
- 
  
     try:
         server = smtplib.SMTP()
@@ -63,7 +63,7 @@ def checkip():
     else:
         with open(record,'w') as f:
             f.writelines(newip)
-        sendmsg(newip)
+        sendmsg(newip,confile)
 
 if __name__=='__main__':
     checkip()
