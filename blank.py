@@ -190,6 +190,11 @@ async def test(loop):
     print(u)
 
 if __name__ == '__main__':
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(test(loop))
+    # loop = asyncio.get_event_loop()
+    # loop.run_until_complete(test(loop))
     # loop.run_forever()
+    p = r'C:\Users\chenj82.RMOASIA\Documents\美图图库\批处理201902251029'
+    fi = os.listdir(p)
+    for f in fi:
+        # print(os.path.join(p,f[:-4]+'c.jpg'))
+        os.rename(os.path.join(p,f),os.path.join(p,f[:-4]+'c.jpg'))
