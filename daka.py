@@ -1,4 +1,5 @@
-
+#!/usr/bin/python3
+#coding:utf-8
 
 # tested in Win
 
@@ -6,89 +7,71 @@ import openpyxl,math,re,os,configparser
 import PIL
 from PIL import ImageFont, Image, ImageDraw
 
-
-
-
-# kq = 'baseline.xlsx'
-# workpath = r'e:\daka'
-# # workpath = os.path.dirname(os.path.realpath(__file__))
-# fontfile = 'STHUPO.TTF'
-# background = 't.jpg'
-# outwsum = 'wsum.jpg'
-# outwon = 'won.jpg'
-# outwoff = 'woff.jpg'
-# color = (239,232,23)
-# size = 30
+from mylog import mylogger,get_funcname
 
 confile = 'daka.ini'
-workpath = os.path.dirname(os.path.realpath(__file__))
-confilepath = os.path.join(workpath,confile)
+scriptpath = os.path.dirname(os.path.realpath(__file__))
+confilepath = os.path.join(scriptpath,confile)
 config = configparser.ConfigParser()
 config.read(confilepath)
-kq = config['setting']['kq']
-fontfile = config['setting']['fontfile']
-background = config['setting']['background']
-outwsum = config['setting']['outwsum']
-outwon = config['setting']['outwon']
-outwoff = config['setting']['outwoff']
-size = int(config['setting']['size'])
-# workpath = config['setting']['workpath']
+workpath = config['setting']['workpath']
+dakarecord = config['setting']['daka']
+walkrecord = config['setting']['walk']
+logfile = os.path.join(workpath,config['setting']['log'])
+logfilelevel = 10
+output = os.path.join(workpath,config['setting']['output'])
+if os.path.exists(output):
+    os.remove(output)
 
-
-color = config['setting']['color']
+############ 图片设置 ############
+fontfile = config['picture']['fontfile']
+background = config['picture']['background']
+picsum = config['picture']['picsum']
+picon = config['picture']['picon']
+picoff = config['picture']['picoff']
+size = int(config['picture']['size'])
+color = config['picture']['color']
 c = color.split(',')
 color = ( int(c[0]),int(c[1]),int(c[2]) )
-
 fontfilepath = os.path.join(workpath,fontfile)
 font = ImageFont.truetype(fontfile,size,encoding='utf-8')
 imageFile = os.path.join(workpath,background)
-wb = openpyxl.load_workbook(os.path.join(workpath,kq))
 
-# def buildtongji(wb):
-#     tjrow = {}
-#     sheet2 = wb['统计']
-#     for i in range(2,sheet2.max_row+1):
-#         name = sheet2.cell(row=i,column=1).value
-#         d = sheet2.cell(row=i,column=2).value
-#         tjrow[name+d] = i
-#     # print(tjrow)
-#     return tjrow
+############ 统计考勤 ############
 
-def tj(wb):
+def tj(dakarecord):
+    l = mylogger(logfile,logfilelevel,get_funcname()) 
+    wb = openpyxl.load_workbook(os.path.join(workpath,dakarecord))
     tjdic ={}
     sheet1 = wb['原始记录']  
     for i in range(4,sheet1.max_row+1):
-        status = sheet1.cell(row=i,column=6).value
-        # print(status)
+        status = sheet1.cell(row=i,column=9).value  #打卡状态
         if  re.search('打卡无效',status):
-            print('打卡无效')
+            l.debug('Row '+str(i)+' 打卡无效')
             continue
-
-        name = sheet1.cell(row=i,column=1).value
-        if name not in tjdic:
+        name = sheet1.cell(row=i,column=1).value  # 姓名
+        if name not in tjdic: 
             tjdic[name] = {}
-
-        dk = sheet1.cell(row=i,column=3).value # 打卡日期时间
+        dk = sheet1.cell(row=i,column=8).value # 打卡日期时间
         day = dk.split(' ')[0].split('-')[-1].replace('0','') 
+        l.debug(name+' '+day+' '+dk)
         if day not in tjdic[name]:
             tjdic[name][day] = {}
         ti = dk.split(' ')[-1] # 打卡时间
         h = int(ti.split(':')[0])
         m = int(ti.split(':')[1])
         hm = h+m/60
-        # print(name+' '+day+' '+dk)
         if hm > 12: # 下班
             tjdic[name][day]['off'] = hm
             tjdic[name][day]['rawoff'] = ti
-            # print(tjdic)
         else:   # 上班
             tjdic[name][day]['on'] = hm
             tjdic[name][day]['rawon'] = ti
-            # print(tjdic)
-    # print(tjdic)
+    l.debug(tjdic)
     return tjdic
 
 def fillempty(tjdic):
+    l = mylogger(logfile,logfilelevel,get_funcname()) 
     for i in tjdic:
         name = i
         for d in tjdic[i]:
@@ -96,13 +79,16 @@ def fillempty(tjdic):
             if 'on' not in tjdic[i][d]:
                 tjdic[name][day]['on'] = 9
                 tjdic[name][day]['rawon'] = '9:00'
+                l.debug(name+' '+day+' 9:00 未打卡')
             if 'off' not in tjdic[i][d]:
                 tjdic[name][day]['off'] = 18
                 tjdic[name][day]['rawoff'] = '18:00'
-    # print(tjdic)     
+                l.debug(name+' '+day+' 18:00 未打卡')
+    l.debug(tjdic)     
     return tjdic
 
 def cal(tjdic):
+    l = mylogger(logfile,logfilelevel,get_funcname()) 
     result = {}
     for i in tjdic:
         name = i
@@ -122,14 +108,14 @@ def cal(tjdic):
                 maxt = off
                 maxoff = rawoff
         avgt = avgt / len(tjdic[i])
-        # print(name,maxt,avgt,sumt)
-        result[name]['max'] = maxoff
-        result[name]['avg'] = avgt
-        result[name]['sum'] = sumt
-    # print(result)
+        l.debug(name+' '+str(maxt)+' '+str(avgt)+' '+str(sumt))
+        result[name]['夜归人榜'] = maxoff
+        result[name]['平均早鸟榜'] = avgt
+        result[name]['最拼命榜'] = sumt
+    l.debug(result)
     return result
 
-def s2hm(i): # convert string to Hour:Minute
+def str2hm(i): # convert string to Hour:Minute
     h = int(i)
     h = '0'+str(h) if h <10 else str(h)
     m = round((i - int(i))*60)
@@ -138,57 +124,67 @@ def s2hm(i): # convert string to Hour:Minute
     return hm
 
 def winneroff(result):
-    print('='*15)
-    print('最晚下班排行榜')
-    print('='*15)
-    maxwinner = {}
-    count = 0
-    for i in result:
-        maxwinner[result[i]['max']] = i
-    woff = {}
-    for i in sorted(maxwinner,reverse=True):
-        count += 1
-        print('%s %s %s' % (count,maxwinner[i],i) )
-        woff[count] = (maxwinner[i],i)        
-        if count == 10: break
+    l = mylogger(logfile,logfilelevel,get_funcname()) 
+    with open(output,'a') as f:
+        l.debug('夜归人榜')
+        f.writelines('='*5+'夜归人榜'+'='*5+'\n')
+        maxwinner = {}
+        count = 0
+        for i in result:
+            maxwinner[result[i]['夜归人榜']] = i
+        woff = {}
+        for i in sorted(maxwinner,reverse=True):
+            count += 1
+            l.debug('%s %s %s' % (count,maxwinner[i],i) )
+            f.writelines('%s %s %s\n' % (count,maxwinner[i],i) )
+            woff[count] = (maxwinner[i],i)        
+    l.debug(woff)
     return woff
 
 def winneron(result):
-    print('='*15)
-    print('平均早鸟排行榜')
-    print('='*15)
-    avgwinner = {}
-    count = 0
-    for i in result:
-        avgwinner[result[i]['avg']] = i
-    won = {}
-    for i in sorted(avgwinner):
-        hm = s2hm(i)
-        count += 1
-        print('%s %s %s' % (count,avgwinner[i],hm) )
-        won[count] = (avgwinner[i],hm)        
-        if count == 10: break
+    l = mylogger(logfile,logfilelevel,get_funcname()) 
+    with open(output,'a') as f:
+        l.debug('平均早鸟榜')
+        f.writelines('='*5+'平均早鸟榜'+'='*5+'\n')
+        avgwinner = {}
+        count = 0
+        for i in result:
+            avgwinner[result[i]['平均早鸟榜']] = i
+        won = {}
+        for i in sorted(avgwinner):
+            hm = str2hm(i)
+            count += 1
+            l.debug('%s %s %s' % (count,avgwinner[i],hm) )
+            f.writelines('%s %s %s\n' % (count,avgwinner[i],hm) )
+            won[count] = (avgwinner[i],hm)        
+    l.debug(won)
     return won
 
-def winnersum(result):
-    print('='*15)
-    print('最拼命榜')
-    print('='*15)
-    sumwinner = {}
-    count = 0
-    for i in result:
-        sumwinner[result[i]['sum']] = i    
-    wsum = {}
-    for i in sorted(sumwinner,reverse=True):
-        hm = s2hm(i)
-        count += 1
-        print('%s %s %s' % (count , sumwinner[i],hm) )
-        wsum[count] = (sumwinner[i],hm)
-        if count == 10: break
+def winner(result,rating):
+    l = mylogger(logfile,logfilelevel,get_funcname()) 
+    with open(output,'a') as f:
+        l.debug(rating)
+        f.writelines('='*5+rating+'='*5+'\n')
+        scorenamedic = {}
+        count = 0
+
+        for i in result:
+            scorenamedic[result[i]['最拼命榜']] = i    
+        wsum = {}
+        for i in sorted(scorenamedic,reverse=True):
+            if rating == '最拼命榜':
+                hm = str2hm(i)
+                hm = hm.split(':')[0]+'小时'+hm.split(':')[1]+'分钟'
+            count += 1
+            l.debug('%s %s %s' % (count , scorenamedic[i],hm))
+            f.writelines('%s %s %s \n' % (count , scorenamedic[i],hm))
+            wsum[count] = (scorenamedic[i],hm)
+    l.debug(wsum)
     return wsum
             
 # wdic = {position:(name,value)...}
 def windraw(wdic,imout,title):
+    l = mylogger(logfile,logfilelevel,get_funcname()) 
     im = Image.open(imageFile)
     draw = ImageDraw.Draw(im)
     x,y = (70,50) #初始左上角的坐标
@@ -205,7 +201,7 @@ def windraw(wdic,imout,title):
         textposition = str(i+1)
         textname = wdic[i+1][0]
         textvalue = wdic[i+1][1]
-        # print(textposition,textname,textvalue)
+        l.debug(textposition+' '+textname+' '+textvalue)
         draw.text( (x,y),textposition,color,font=font )
         draw.text( (x+xstep*2,y),textname,color,font=font )
         draw.text( (x+xstep*4.2,y),textvalue,color,font=font )
@@ -214,27 +210,69 @@ def windraw(wdic,imout,title):
     im.save(imout)
 
 
-try:
-    tjdic = tj(wb)
-    tjdic = fillempty(tjdic)
-    result = cal(tjdic)
-    won =  winneron(result)
-    woff = winneroff(result)
-    wsum = winnersum(result)
-except PermissionError as e:
-    print(e)
-    print('Is file being opened?')
+############ 统计步数 ############
+
+def walk(walkrecord):
+    l = mylogger(logfile,logfilelevel,get_funcname()) 
+    namestepdic ={}
+    wb = openpyxl.load_workbook(os.path.join(workpath,walkrecord))
+    sheet = wb['钉钉运动数据导出1']  
+    for i in range(3,sheet.max_row+1):
+        name = sheet.cell(row=i,column=3).value  # 姓名
+        if name not in namestepdic: 
+            namestepdic[name] = {}
+            tstep = 0
+        steps = sheet.cell(row=i,column=5).value # 打卡日期时间
+        l.debug(name+' '+str(steps))
+        tstep = tstep + steps
+        namestepdic[name] = tstep
+    l.debug(namestepdic)
+    return namestepdic
+
+def winnerstep(namestepdic):
+    l = mylogger(logfile,logfilelevel,get_funcname()) 
+    with open(output,'a') as f:
+        l.debug('脚力榜')
+        f.writelines('='*5+'脚力榜'+'='*5+'\n')
+        count = 0
+        stepnamedic = {}
+        for s in namestepdic:
+            stepnamedic[namestepdic[s]] = s
+        for s in sorted(stepnamedic,reverse=True):
+            count += 1
+            l.debug('%s %s %s' % (count ,stepnamedic[s],s))  
+            f.writelines('%s %s %s\n' % (count ,stepnamedic[s],s))
+    l.debug(stepnamedic)  
+    return stepnamedic
 
 
-title = ['办公室达人','排名','名字','工作时长（小时）']
-outpath = os.path.join(workpath,outwsum)
-windraw(wsum,outpath,title)
 
-title = ['早鸟榜','排名','名字','平均打卡时间']
-outpath = os.path.join(workpath,outwon)
-windraw(won,outpath,title)
+if __name__=='__main__':
+    try:        
+        tjdic = tj(dakarecord)
+        tjdic = fillempty(tjdic)
+        result = cal(tjdic)
+        won =  winneron(result)
+        woff = winneroff(result)
+        wsum = winner(result,'最拼命榜')
 
-title = ['夜归人','排名','名字','最晚打卡时间']
-outpath = os.path.join(workpath,outwoff)
-windraw(woff,outpath,title)
+        title = ['办公室达人','排名','名字','工作时长（小时）']
+        outpath = os.path.join(workpath,picsum)
+        windraw(wsum,outpath,title)
+
+        title = ['早鸟榜','排名','名字','平均打卡时间']
+        outpath = os.path.join(workpath,picon)
+        windraw(won,outpath,title)
+
+        title = ['夜归人','排名','名字','最晚打卡时间']
+        outpath = os.path.join(workpath,picoff)
+        windraw(woff,outpath,title)
+
+        stepdic = walk(walkrecord)
+        winnerstep(stepdic)
+
+    except PermissionError as e:
+        print(e)
+        print('Is file being opened?')
+
 
