@@ -147,21 +147,35 @@ def winner(result,bang): # sort according to score
                 hm = i
             count += 1
             l.debug('%s %s %s' % (count , scorenamedic[i],hm))
-            f.writelines('%s %s %s \n' % (count , scorenamedic[i],hm))
+            # f.writelines('%s %s %s \n' % (count , scorenamedic[i],hm))
             winlist[count] = (scorenamedic[i],hm)
-    l.debug(winlist)
-    return winlist
-
-def toplist(winlist):
-    toplist = {}
-    for t in range(len(winlist)):
-
-
-
+        l.debug(winlist)
+        toplist = buildtoplist(winlist)
+        for t in toplist:
+            f.writelines('%s %s %s \n' % (t[0],t[1],t[2]))
     return toplist
 
-# wdic = {position:(name,value)...}
-def windraw(wdic,imout,title):
+def buildtoplist(winlist):
+    l = mylogger(logfile,logfilelevel,get_funcname()) 
+    toplist = []
+    lastrank = 1
+    lastvalue = ''
+    for t in range(len(winlist)):
+        rank = t+1
+        if rank > 10: break
+        name = winlist[rank][0]
+        value = str(winlist[rank][1])
+        if value == lastvalue:
+            rank = lastrank
+        l.debug([rank,name,value])
+        toplist.append([str(rank),name,value])
+        lastvalue = value
+        lastrank = rank
+    l.debug(toplist)
+    return toplist
+
+# wlist = [[position,name,value]...]
+def windraw(wlist,imout,title):
     l = mylogger(logfile,logfilelevel,get_funcname()) 
     im = Image.open(imageFile)
     draw = ImageDraw.Draw(im)
@@ -175,10 +189,10 @@ def windraw(wdic,imout,title):
     draw.text( (x+xstep*2,y),title[2],color,font=font )
     draw.text( (x+xstep*4,y),title[3],color,font=font )
     x,y = (x, y+ystep)
-    for i in range(10):
-        textposition = str(i+1)
-        textname = wdic[i+1][0]
-        textvalue = str(wdic[i+1][1])
+    for i in range(len(wlist)):
+        textposition = wlist[i][0]
+        textname = wlist[i][1]
+        textvalue = str(wlist[i][2])
         l.debug(textposition+' '+textname+' '+str(textvalue))
         draw.text( (x,y),textposition,color,font=font )
         draw.text( (x+xstep*2,y),textname,color,font=font )
@@ -226,10 +240,10 @@ def main():
                     ['健步狂人榜','排名','名字','健身步数',winsteplist] ]
 
         for b in piclist: 
-            l.debug(b)           
             outpath = os.path.join(workpath,b[0]+'.jpg')
+            title = [b[0],b[1],b[2],b[3]]
             l.debug(outpath)
-            windraw(b[4],outpath,[b[0],b[1],b[2],b[3]])
+            windraw(b[4],outpath,title)
 
         # title = ['办公室达人','排名','名字','工作时长（小时）']
         # outpath = os.path.join(workpath,picsum)
