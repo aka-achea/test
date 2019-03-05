@@ -193,8 +193,15 @@ if __name__ == '__main__':
     # loop = asyncio.get_event_loop()
     # loop.run_until_complete(test(loop))
     # loop.run_forever()
-    p = r'C:\Users\chenj82.RMOASIA\Documents\美图图库\批处理201902251029'
-    fi = os.listdir(p)
-    for f in fi:
-        # print(os.path.join(p,f[:-4]+'c.jpg'))
-        os.rename(os.path.join(p,f),os.path.join(p,f[:-4]+'c.jpg'))
+
+    # p = r'C:\Users\chenj82.RMOASIA\Documents\美图图库\批处理201902251029'
+    # fi = os.listdir(p)
+    # for f in fi:
+    #     # print(os.path.join(p,f[:-4]+'c.jpg'))
+    #     os.rename(os.path.join(p,f),os.path.join(p,f[:-4]+'c.jpg'))
+
+
+    l = 'http://dl.stream.qqmusic.qq.com/C400003lVR2n4O9XtI.m4a?guid=858261004&vkey=87C1FAE252BDD4F5D97CB5B9EEB1FB525380CE0089DE9BB17B2913A4D4483EE7CD0B9AFD6F70C329C01C19B6AD6058846E0A29122BB1729B&uin=0&fromtag=66'
+    from openlink import op_requests
+    import myget 
+    myget.dl(l,'g.m4a')
