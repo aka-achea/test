@@ -199,9 +199,39 @@ if __name__ == '__main__':
     # for f in fi:
     #     # print(os.path.join(p,f[:-4]+'c.jpg'))
     #     os.rename(os.path.join(p,f),os.path.join(p,f[:-4]+'c.jpg'))
+    quantity = {'1':['M500','.mp3','99'],
+                '2':['M800','.mp3','99'],
+                '3':['F000','.flac','99'],
+                '4':['C400','m4a','66'],
+                '5':['A000','.ape']            
+                }
 
+    def get_vkey(songmid):
+        from openlink import op_requests
+        url = 'http://c.y.qq.com/base/fcgi-bin/fcg_music_express_mobile3.fcg'
+        para = {'loginUin':'0',
+                'hostUin':'0',
+                'format':'json',
+                'inCharset':'utf8',
+                'outCharset':'utf-8',
+                'notice':'0',
+                'platform':'yqq',
+                'needNewCode':'0',
+                'cid':'205361747', #important 205361747
+                'uin':'0',
+                'songmid':str(songmid),
+                'filename':'M800'+str(songmid)+'.mp3',
+                'guid':'6179861260' #504753841
+                }
+        #guid 6179861260
+        req = op_requests(url,para)
+        j = req.json()
+        vkey = j['data']['items'][0]['vkey']
+        return vkey
 
-    l = 'http://dl.stream.qqmusic.qq.com/C400003lVR2n4O9XtI.m4a?guid=858261004&vkey=87C1FAE252BDD4F5D97CB5B9EEB1FB525380CE0089DE9BB17B2913A4D4483EE7CD0B9AFD6F70C329C01C19B6AD6058846E0A29122BB1729B&uin=0&fromtag=66'
-    from openlink import op_requests
+    vkey = get_vkey('003lVR2n4O9XtI')
+    print(vkey)
+    l = 'http://dl.stream.qqmusic.qq.com/M800003lVR2n4O9XtI.mp3?guid=858261004&vkey=%s&uin=0&fromtag=3' % vkey
+    print(l)
     import myget 
-    myget.dl(l,'g.m4a')
+    myget.dl(l,'g.mp3')
