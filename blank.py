@@ -199,39 +199,7 @@ if __name__ == '__main__':
     # for f in fi:
     #     # print(os.path.join(p,f[:-4]+'c.jpg'))
     #     os.rename(os.path.join(p,f),os.path.join(p,f[:-4]+'c.jpg'))
-    quantity = {'1':['M500','.mp3','99'],
-                '2':['M800','.mp3','99'],
-                '3':['F000','.flac','99'],
-                '4':['C400','m4a','66'],
-                '5':['A000','.ape']            
-                }
 
-    def get_vkey(songmid):
-        from openlink import op_requests
-        url = 'http://c.y.qq.com/base/fcgi-bin/fcg_music_express_mobile3.fcg'
-        para = {'loginUin':'0',
-                'hostUin':'0',
-                'format':'json',
-                'inCharset':'utf8',
-                'outCharset':'utf-8',
-                'notice':'0',
-                'platform':'yqq',
-                'needNewCode':'0',
-                'cid':'205361747', #important 205361747
-                'uin':'0',
-                'songmid':str(songmid),
-                'filename':'M800'+str(songmid)+'.mp3',
-                'guid':'6179861260' #504753841
-                }
-        #guid 6179861260
-        req = op_requests(url,para)
-        j = req.json()
-        vkey = j['data']['items'][0]['vkey']
-        return vkey
-
-    vkey = get_vkey('003lVR2n4O9XtI')
-    print(vkey)
-    l = 'http://dl.stream.qqmusic.qq.com/M800003lVR2n4O9XtI.mp3?guid=858261004&vkey=%s&uin=0&fromtag=3' % vkey
-    print(l)
-    import myget 
-    myget.dl(l,'g.mp3')
+    url = 'http://isure.stream.qqmusic.qq.com/C100004cNNNW0QG6RR.m4a?fromtag=32'
+    import myget
+    myget.dl(url,'a.m4a')
