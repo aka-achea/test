@@ -194,12 +194,11 @@ if __name__ == '__main__':
     # loop.run_until_complete(test(loop))
     # loop.run_forever()
 
-    # p = r'C:\Users\chenj82.RMOASIA\Documents\美图图库\批处理201902251029'
-    # fi = os.listdir(p)
-    # for f in fi:
-    #     # print(os.path.join(p,f[:-4]+'c.jpg'))
-    #     os.rename(os.path.join(p,f),os.path.join(p,f[:-4]+'c.jpg'))
+    p = r'N:\LifeTrack\CD'
+    fi = os.listdir(p)
+    for f in fi:
+        fp = os.path.join(p,f)
+        if os.path.isfile(fp):
+        # print(os.path.join(p,f[:-4]+'c.jpg'))
+            os.rename(fp,os.path.join(p,'VA - '+f))
 
-    url = 'http://isure.stream.qqmusic.qq.com/C100004cNNNW0QG6RR.m4a?fromtag=32'
-    import myget
-    myget.dl(url,'a.m4a')

@@ -1,11 +1,10 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #coding:utf-8
-#python 3
 #tested in Win
 #tested in Centos
 
 
-import smtplib, configparser, os ,sys,subprocess
+import smtplib, configparser, os ,time,sys,subprocess
 # from email.mime.multipart import MIMEMultipart
 # from email.mime.base import MIMEBase
 from email.mime.text import MIMEText
@@ -18,36 +17,33 @@ else:
     record = r'/job/pubip'
     confile = r'/job/mail.ini'
 
-def getpubip():
-    cmd = 'curl ifconfig.me'
-    newip = subprocess.run(['curl','ifconfig.me','>',record])
-    return newip
 
 def sendmsg(newip,confile):
-    config = configparser.ConfigParser()
-    config.read(confile)
-    mailsvr = config['mailsetting']['mailsvr']
-    fromaddr = config['mailsetting']['fromaddr']
-    toaddr = config['mailsetting']['toaddr']
-    user = config['mailsetting']['user']
-    passwd = config['mailsetting']['pass']
+   # config = configparser.ConfigParser()
+   # config.read(confile)
+    mailsvr = 'smtp.163.com'
+    sender = 'favoritebm@163.com'
+    receiver = 'favoritebm@163.com'
+    user = 'favoritebm@163.com'
+    passwd = 'orz163'
     body = newip
     # print(mailsvr)
+    #print(user)
 
     msg = MIMEText(body,'plain','utf-8')
-    msg['From'] = fromaddr
-    msg['To'] = toaddr
+    msg['from'] = sender
+    msg['to'] = receiver
     msg['Subject'] = 'Public IP Change'
- 
+
     try:
-        server = smtplib.SMTP()
-        server.connect(mailsvr,25)
-        # server = smtplib.SMTP_SSL(mailsvr)
+        #server = smtplib.SMTP(mailsvr,25)
+        server = smtplib.SMTP_SSL(mailsvr,465)
+        #server = smtplib.SMTP_SSL()
+        #server.connect(mailsvr,465)
         server.set_debuglevel(1)
         server.login(user,passwd)
-        server.ehlo()
-        # server.starttls()
-        server.sendmail(fromaddr,toaddr,msg.as_string())
+        #server.ehlo()
+        server.sendmail(sender,receiver,msg.as_string())
         server.quit()
     except smtplib.SMTPException as e:
         print('error',e)
@@ -56,16 +52,20 @@ def sendmsg(newip,confile):
 def checkip():
     # compare IP
     with open(record,'r') as f:
-        ip = f.readline().split()[0]
-    newip = getpubip()
+        ip = f.readline()
+        print('old'+ip)
+    cmd = 'curl -s ifconfig.me --max-time 7 -o '+record
+    os.popen(cmd)
+    time.sleep(5)
+    with open(record,'r') as f:
+        newip = f.readline()
+        print('new'+newip)
     if ip == newip :
         print('IP no change')
     else:
-        with open(record,'w') as f:
-            f.writelines(newip)
+        print('IP changed')
         sendmsg(newip,confile)
 
 if __name__=='__main__':
     checkip()
-
 
