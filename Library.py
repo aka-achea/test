@@ -4,16 +4,17 @@
 
 
 from urllib.error import URLError
-from urllib.parse import quote
-import re,os,json, time, shutil,sys,sqlite3,coloredlogs,logging,argparse,random
+# from urllib.parse import quote
+import re,os,json, time, shutil,sys,sqlite3,argparse,random
 from bs4 import BeautifulSoup
 from urllib.request import urlopen,Request,HTTPError,unquote
 from html.parser import HTMLParser
 from prettytable import PrettyTable , from_db_cursor
+import requests
 
 # customized module
 from mylog import mylogger,get_funcname
-from openlink import op_simple
+from openlink import op_simple,op_requests
 
 headers = {
     "Accept":"text/html,application/xhtml+xml,application/xml; " \
@@ -37,8 +38,19 @@ logfile = masterpath+'library.log'
 database = masterpath+'library.db'
 wishlist = masterpath+'library.ini'
 blacklist = masterpath+'libblacklist.txt'
-basicquery = "http://ipac.library.sh.cn/ipac20/ipac.jsp?menu=search&aspect=basic_search&profile=sl&ri=&index=.TW&term="
-advancequery = 'http://ipac.library.sh.cn/ipac20/ipac.jsp?menu=search&'
+# basicquery = "http://ipac.library.sh.cn/ipac20/ipac.jsp?menu=search&aspect=basic_search&profile=sl&ri=&index=.TW&term="
+
+queryapi = 'http://ipac.library.sh.cn/ipac20/ipac.jsp'
+
+
+"""
+TW = 题名
+AW = 著者
+SW = 主题
+SE = 丛书名
+PW = 出版者
+"""
+
 
 # class dec: # tracer
 #     def __init__(self,func):
@@ -144,48 +156,52 @@ class db():
         conn.close()
 
 # @dec  #return version,num
-def find_book_ver(qweb,book):
+def find_book_ver(queryapi,book,author=''):
     l = mylogger(logfile,logfilelevel,get_funcname())  
+    para = [('menu','search'),
+        ('index','.TW'),
+        ('term',book),
+        ('index','.AW'),
+        ('term',author)]
+    l.debug(para)    
     try:
         global version,num
-        html = op_simple(qweb)[0]
-        bsObj = BeautifulSoup(html,"html.parser")
+        html = op_requests(url=queryapi,para=para)
+        l.debug(html.url)
+        bsObj = BeautifulSoup(html.content,"html.parser")
         nobook = bsObj.find_all(string=re.compile("对不起"))
         if nobook: # not find any book
             l.err("对不起, 不能找到任何命中书目")
-            # pass
-            #sys.exit()
+            return version,num  # all none
         else:
-            l.debug("Find some book")
-        vbook = bsObj.find_all("a",{"class":"mediumBoldAnchor"})
-        #l.info(vbook)
-        if vbook: # mediumBoldAnchor >= 1 , different version find, only scan 1st page
-            for v in vbook:
-                l.debug(v)
-                bookname = str(v).split('<')[1].split('>')[-1].strip()
-                l.info(bookname)
-                if bookname == book:
-                    n = v
-                    for i in range(7):
-                        n = n.parent
-                        l.debug(n)
-                    n = n.previous_sibling.text.strip()
-                    l.debug(n)
-                    l.verbose(n+bookname)
-                    num.append(n)
-                    l.verbose(v["href"])
-                    version.append(v["href"])
-                else:
-                    l.info(bookname)
-                    #sys.exit()
-                    # pass
-            if version == []: #there is book, but name doesn't match
-                l.error("请确认书名")
-                sys.exit()
-            else:
-                for i in version : l.debug(i)
-        else: # mediumBoldAnchor = 0 , search directly
-            version = 0
+            vbook = bsObj.find_all("a",{"class":"mediumBoldAnchor"})
+            l.debug('Find book version below')
+            if vbook: # mediumBoldAnchor >= 1 , different version find, only scan 1st page
+                for v in vbook:
+                    l.debug(v)
+                    bookname = str(v).split('<')[1].split('>')[-1].strip()
+                    # l.info(bookname)
+                    if bookname == book:
+                        n = v
+                        for i in range(7): n = n.parent                  
+                        # l.debug(n)
+                        n = n.previous_sibling.text.strip()
+                        # l.debug(n)  # sample n :  "1."
+                        l.verbose(n+bookname)
+                        num.append(n)
+                        l.verbose(v["href"])
+                        version.append(v["href"])
+                    else:
+                        l.info(bookname+' not match')
+                        #sys.exit()
+                        # pass
+                if version == []: #there is book, but no name match
+                    l.error("请确认书名")
+                    return version,num  # all none
+                # else:
+                #     for i in version : l.debug(i)
+            else: # mediumBoldAnchor = 0 , search directly
+                version = 1
     except AttributeError as e:
         print(e)
     return version,num
@@ -201,7 +217,8 @@ def find_other_lib(v):
         #l.info(bookname["title"])
         T = 20
         while T != 0:  #find other library
-            html = op_simple(v)[0]
+            # html = op_simple(v)[0]
+            html = op_requests(v).content
             bsObj = BeautifulSoup(html,"html.parser")
             other = bsObj.find("input",{"value":"其它馆址"})
             l.verbose(other)
@@ -209,7 +226,7 @@ def find_other_lib(v):
                 T = 0
             else:
                 T = T - 1
-                l.error("重新加载网页")
+                l.error("重新加载网页...")
         ol = (str(other).split(" "))
         l.debug(ol)
         try:
@@ -277,21 +294,20 @@ def find_library(bsObj,book):
             l.info(status)
 
 # @dec
-def single(book):
+def single(book,author=''):
     l = mylogger(logfile,logfilelevel,get_funcname())  
     l.info("搜寻图书："+book)
-    wcode = quote(book)
-    l.debug("Transalte to Web code : "+wcode)      
-    qweb = basicquery+wcode
-    version,num = find_book_ver(qweb,book)
-    if version == 0:
+    if author:
+        l.info("作者："+author)
+    version,num = find_book_ver(queryapi,book,author)
+    if version == 1:
         l.debug("没其他版本，直接搜!")
-        link = find_other_lib(qweb)
+        link = find_other_lib(queryapi)
     else:
-        D = {num[i]:version[i] for i in range(len(version))}
-        l.debug(D)
-        if version:
-            l.debug("Scan version")
+         if version: #excluding none
+            D = {num[i]:version[i] for i in range(len(version))}
+            l.debug(D) 
+            l.info("Scan version")
             for v in D:
                 l.info(v + book)
                 link = find_other_lib(D[v])
@@ -305,19 +321,20 @@ def main():
     l = mylogger(logfile,logfilelevel,get_funcname())  
     parser = argparse.ArgumentParser(description = 'Library search tool')
     group = parser.add_mutually_exclusive_group()
-    group.add_argument('-s','--single',help='Search single book ')
     group.add_argument('-m','--multiple',help='Search multiple books',action='store_true')
     group.add_argument('-c','--clean',help='Clean database',action='store_true')
     group.add_argument('-q',help='Query all|libary|single book|best',choices=['a','l','s','b'])
     parser.add_argument('-ql',help='Query one library')
     parser.add_argument('-qs',help='Query one book')
     parser.add_argument('-qb',help='Query best library',action='store_true')
+    parser.add_argument('-b','--book',help='Search book ')
+    parser.add_argument('-a','--author',help='Search author')
     args = parser.parse_args()
 
-    if args.single:
-        book = args.single
-        single(book)
-
+    if args.book:
+        book = args.book
+        single(book,args.author if args.author else '')
+      
     elif args.multiple == True:
         l.info('Search multiple books')
         with open(wishlist, 'r') as w:
@@ -369,6 +386,7 @@ if __name__=='__main__':
 
 """
 Changelog:
+2019.3.11 Add author search key v2.5
 2019.1.22 optimize argparse v2.4
 2018.12.25 add keyinterrupt v2.3
 2018.12.24 use argparse,prettytable v2.2
@@ -389,5 +407,5 @@ Changelog:
 Flow chart:
 search_link find_book_ver  find_other_lib  find_library       query
     |             |               |              |              |
-q2 ---> qweb ---------> [version] ---> link ------------> lib ---> Result
+q2 ---> queryapi ---------> [version] ---> link ------------> lib ---> Result
 """
