@@ -194,11 +194,22 @@ if __name__ == '__main__':
     # loop.run_until_complete(test(loop))
     # loop.run_forever()
 
-    p = r'N:\LifeTrack\CD'
-    fi = os.listdir(p)
-    for f in fi:
-        fp = os.path.join(p,f)
-        if os.path.isfile(fp):
-        # print(os.path.join(p,f[:-4]+'c.jpg'))
-            os.rename(fp,os.path.join(p,'VA - '+f))
+    # p = r'N:\LifeTrack\CD'
+    # fi = os.listdir(p)
+    # for f in fi:
+    #     fp = os.path.join(p,f)
+    #     if os.path.isfile(fp):
+    #     # print(os.path.join(p,f[:-4]+'c.jpg'))
+    #         os.rename(fp,os.path.join(p,'VA - '+f))
 
+    ignorelist = ['因装修暂闭馆','闭馆修缮']
+    lib = ['奉贤分馆因装修暂闭馆','奉贤分馆']
+
+    for l in lib:
+        for s in ignorelist:
+            if re.search(s,l) is not None:
+                print('match')
+                break
+            else:
+                print('no match')
+        print(l)

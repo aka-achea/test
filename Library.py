@@ -15,16 +15,23 @@ import requests
 # customized module
 from mylog import mylogger,get_funcname
 from openlink import op_simple,op_requests
+from mytool import mywait
 
-headers = {
-    "Accept":"text/html,application/xhtml+xml,application/xml; " \
-        "q=0.9,image/webp,*/*;q=0.8",
-    "Accept-Encoding":"text/html",
-    "Accept-Language":"en-US,en;q=0.8,zh-CN;q=0.6,zh;q=0.4,zh-TW;q=0.2",
-    "Content-Type":"application/x-www-form-urlencoded",
-    "User-Agent":"Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.36 "\
-        "(KHTML, like Gecko) Chrome/32.0.1700.77 Safari/537.36"
-}
+# headers = {
+#     "Accept":"text/html,application/xhtml+xml,application/xml; " \
+#         "q=0.9,image/webp,*/*;q=0.8",
+#     "Accept-Encoding":"text/html",
+#     "Accept-Language":"en-US,en;q=0.8,zh-CN;q=0.6,zh;q=0.4,zh-TW;q=0.2",
+#     "Content-Type":"application/x-www-form-urlencoded",
+#     "User-Agent":"Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.36 "\
+#         "(KHTML, like Gecko) Chrome/32.0.1700.77 Safari/537.36"
+# }
+
+ignorelist = ['因装修暂闭馆','闭馆修缮']
+blacklist = ['徐汇华泾镇','青浦夏阳','崇明港西镇',\
+            '浦东洋泾','浦东新区新川沙','浦东沪东新村','杨浦长白新村','杨浦四平',\
+            '奉贤分馆','闵行分馆','闵行莘庄工业区','嘉定分馆','嘉定分馆(新馆)','松江分馆','']
+whitelist = ['普陀分馆','黄浦分馆','静安区图书馆(新闸路)','普陀宜川']
 
 plink = set() #link to different pages of version list
 num = [] #link to book version number
@@ -37,11 +44,8 @@ logfilelevel = 10
 logfile = masterpath+'library.log'
 database = masterpath+'library.db'
 wishlist = masterpath+'library.ini'
-blacklist = masterpath+'libblacklist.txt'
 # basicquery = "http://ipac.library.sh.cn/ipac20/ipac.jsp?menu=search&aspect=basic_search&profile=sl&ri=&index=.TW&term="
-
 queryapi = 'http://ipac.library.sh.cn/ipac20/ipac.jsp'
-
 
 """
 TW = 题名
@@ -215,11 +219,12 @@ def find_other_lib(v):
         #print(bookname)
         #for i in bookname:  print(i["title"])
         #l.info(bookname["title"])
-        T = 20
+        T = 10
         while T != 0:  #find other library
             # html = op_simple(v)[0]
-            html = op_requests(v).content
-            bsObj = BeautifulSoup(html,"html.parser")
+            html = op_requests(v)
+            l.debug(html.url)
+            bsObj = BeautifulSoup(html.content,"html.parser")
             other = bsObj.find("input",{"value":"其它馆址"})
             l.verbose(other)
             if other :
@@ -227,6 +232,7 @@ def find_other_lib(v):
             else:
                 T = T - 1
                 l.error("重新加载网页...")
+                mywait(10)
         ol = (str(other).split(" "))
         l.debug(ol)
         try:
@@ -235,7 +241,9 @@ def find_other_lib(v):
             l.debug(other_lib)
             link.add(other_lib)
             #go to other_lib
-            bsObj = BeautifulSoup(op_simple(other_lib)[0],"html.parser")
+            html = op_requests(other_lib)
+            l.debug(html.url)
+            bsObj = BeautifulSoup(html.content,"html.parser")
             # find more page of other lib
             lk = bsObj.find_all(href=re.compile("staffonly=$"))
             for i in lk :  link.add(i["href"])
@@ -262,34 +270,38 @@ def find_library(bsObj,book):
             library = i.td
             l.verbose("馆址:"+library.text)
             lib = library.text
-            room = library.next_sibling
-            l.verbose("馆藏地:"+room.text)
-            catalog = room.next_sibling
-            l.verbose("索引号:"+catalog.text)
-            cat = catalog.text
-            if bsObj.find(title="应还日期") :
-                #print("find 应还日期")
-                #index = room.next_sibling
-                #print(index.text)
-                btype = room.next_sibling.next_sibling.next_sibling.next_sibling
-            else:
-                btype = room.next_sibling.next_sibling.next_sibling
-            # bt = btype.text
-            l.verbose("馆藏类型:"+btype.text)
-            label = btype.next_sibling
-            l.verbose("馆藏条码:"+label.text)
-            SN = label.text
-            conn = sqlite3.connect(database)
-            cursor = conn.cursor()
-            if btype.text == "普通外借资料":
-                try:
-                    cursor.execute("insert into inventory values (?,?,?,?)", (SN,book,lib,cat))
-                except sqlite3.IntegrityError as e:
-                    l.verbose(e)
-                    l.error("Duplicate: "+SN+" "+book+" "+lib)
-            cursor.close()
-            conn.commit()
-            conn.close()
+            if lib in blacklist:
+                continue
+            #  map(lambda x:re.search(x,lib),ignorelist) :
+            else:         
+                room = library.next_sibling
+                l.verbose("馆藏地:"+room.text)
+                catalog = room.next_sibling
+                l.verbose("索引号:"+catalog.text)
+                cat = catalog.text
+                if bsObj.find(title="应还日期") :
+                    #print("find 应还日期")
+                    #index = room.next_sibling
+                    #print(index.text)
+                    btype = room.next_sibling.next_sibling.next_sibling.next_sibling
+                else:
+                    btype = room.next_sibling.next_sibling.next_sibling
+                # bt = btype.text
+                l.verbose("馆藏类型:"+btype.text)
+                label = btype.next_sibling
+                l.verbose("馆藏条码:"+label.text)
+                SN = label.text
+                conn = sqlite3.connect(database)
+                cursor = conn.cursor()
+                if btype.text == "普通外借资料":
+                    try:
+                        cursor.execute("insert into inventory values (?,?,?,?)", (SN,book,lib,cat))
+                    except sqlite3.IntegrityError as e:
+                        l.verbose(e)
+                        l.error("Duplicate: "+SN+" "+book+" "+lib)
+                cursor.close()
+                conn.commit()
+                conn.close()
         else:
             l.info(status)
 
