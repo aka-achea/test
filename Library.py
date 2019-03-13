@@ -55,7 +55,6 @@ SE = 丛书名
 PW = 出版者
 """
 
-
 # class dec: # tracer
 #     def __init__(self,func):
 #         self.func = func
@@ -79,10 +78,20 @@ def modificate(text):
     #file_name = file_name.replace('$', '\\$')    # for command, see issue #7
     after = text
     if before != after :
-        l.debug("Before modify >>> "+before)
-        l.debug("After modify >>> "+after)
+        l.debug("Before modify >>>> "+before)
+        l.debug("After modify >>>> "+after)
     return text
 
+def filter_lib(lib):
+    #  map(lambda x:re.search(x,lib),ignorelist) :
+    if lib in blacklist:
+        return False
+    else:
+        for s in ignorelist:
+            if re.findall(s,lib) is not None:
+                return False
+            else:
+                return True
 
 class db():
     def create(self):
@@ -170,12 +179,14 @@ def find_book_ver(queryapi,book,author=''):
     l.debug(para)    
     try:
         global version,num
+        version,num = [],[]
         html = op_requests(url=queryapi,para=para)
         l.debug(html.url)
         bsObj = BeautifulSoup(html.content,"html.parser")
         nobook = bsObj.find_all(string=re.compile("对不起"))
         if nobook: # not find any book
             l.err("对不起, 不能找到任何命中书目")
+            version = []
             return version,num  # all none
         else:
             vbook = bsObj.find_all("a",{"class":"mediumBoldAnchor"})
@@ -206,9 +217,11 @@ def find_book_ver(queryapi,book,author=''):
                 #     for i in version : l.debug(i)
             else: # mediumBoldAnchor = 0 , search directly
                 version = 1
+                num = html.url
+                return version, num
     except AttributeError as e:
         print(e)
-    return version,num
+    return version
 
 # @dec #return other library link
 def find_other_lib(v):
@@ -263,6 +276,9 @@ def find_other_lib(v):
 def find_library(bsObj,book):
     l = mylogger(logfile,logfilelevel,get_funcname())  
     global D, fail
+    conn = sqlite3.connect(database)
+    cursor = conn.cursor()
+
     for i in bsObj.find_all("tr",{"height":"15"}):
         status = i.td.next_sibling.next_sibling.next_sibling.text
         l.verbose("="*10)
@@ -270,10 +286,7 @@ def find_library(bsObj,book):
             library = i.td
             l.verbose("馆址:"+library.text)
             lib = library.text
-            if lib in blacklist:
-                continue
-            #  map(lambda x:re.search(x,lib),ignorelist) :
-            else:         
+            if filter_lib(lib) == True:       
                 room = library.next_sibling
                 l.verbose("馆藏地:"+room.text)
                 catalog = room.next_sibling
@@ -291,19 +304,20 @@ def find_library(bsObj,book):
                 label = btype.next_sibling
                 l.verbose("馆藏条码:"+label.text)
                 SN = label.text
-                conn = sqlite3.connect(database)
-                cursor = conn.cursor()
+
                 if btype.text == "普通外借资料":
                     try:
                         cursor.execute("insert into inventory values (?,?,?,?)", (SN,book,lib,cat))
                     except sqlite3.IntegrityError as e:
                         l.verbose(e)
                         l.error("Duplicate: "+SN+" "+book+" "+lib)
-                cursor.close()
-                conn.commit()
-                conn.close()
+
         else:
             l.info(status)
+
+    cursor.close()
+    conn.commit()
+    conn.close()
 
 # @dec
 def single(book,author=''):
@@ -314,7 +328,9 @@ def single(book,author=''):
     version,num = find_book_ver(queryapi,book,author)
     if version == 1:
         l.debug("没其他版本，直接搜!")
-        link = find_other_lib(queryapi)
+        link = find_other_lib(num)
+    elif version == None:
+
     else:
          if version: #excluding none
             D = {num[i]:version[i] for i in range(len(version))}
@@ -398,6 +414,7 @@ if __name__=='__main__':
 
 """
 Changelog:
+2019.3.13 add filter lib function v2.6
 2019.3.11 Add author search key v2.5
 2019.1.22 optimize argparse v2.4
 2018.12.25 add keyinterrupt v2.3
