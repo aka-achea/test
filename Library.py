@@ -34,8 +34,8 @@ blacklist = ['徐汇华泾镇','青浦夏阳','崇明港西镇',\
 whitelist = ['普陀分馆','黄浦分馆','静安区图书馆(新闸路)','普陀宜川']
 
 plink = set() #link to different pages of version list
-num = [] #link to book version number
-version = [] #link to different book version
+# num = [] #link to book version number
+# version = [] #link to different book version
 link = set() #link to library list of different pages
 D = {}
 fail = []
@@ -178,7 +178,7 @@ def find_book_ver(queryapi,book,author=''):
         ('term',author)]
     l.debug(para)    
     try:
-        global version,num
+        # global version,num
         version,num = [],[]
         html = op_requests(url=queryapi,para=para)
         l.debug(html.url)
@@ -186,12 +186,11 @@ def find_book_ver(queryapi,book,author=''):
         nobook = bsObj.find_all(string=re.compile("对不起"))
         if nobook: # not find any book
             l.err("对不起, 不能找到任何命中书目")
-            version = []
             return version,num  # all none
         else:
             vbook = bsObj.find_all("a",{"class":"mediumBoldAnchor"})
-            l.debug('Find book version below')
             if vbook: # mediumBoldAnchor >= 1 , different version find, only scan 1st page
+                l.debug('Find book version below')
                 for v in vbook:
                     l.debug(v)
                     bookname = str(v).split('<')[1].split('>')[-1].strip()
@@ -211,17 +210,18 @@ def find_book_ver(queryapi,book,author=''):
                         #sys.exit()
                         # pass
                 if version == []: #there is book, but no name match
-                    l.error("请确认书名")
+                    l.error("都不符合，请确认书名")
                     return version,num  # all none
                 # else:
                 #     for i in version : l.debug(i)
             else: # mediumBoldAnchor = 0 , search directly
+                l.debug("没其他版本，直接搜!")
                 version = 1
                 num = html.url
                 return version, num
     except AttributeError as e:
         print(e)
-    return version
+    return version,num
 
 # @dec #return other library link
 def find_other_lib(v):
@@ -326,24 +326,26 @@ def single(book,author=''):
     if author:
         l.info("作者："+author)
     version,num = find_book_ver(queryapi,book,author)
-    if version == 1:
-        l.debug("没其他版本，直接搜!")
+    if version == 1:        
         link = find_other_lib(num)
-    elif version == None:
-
+        for lib in link:
+            l.debug(lib)
+            bsObj = op_simple(link)[0]
+            find_library(bsObj,book)
+    elif version == []:
+        pass
     else:
-         if version: #excluding none
-            D = {num[i]:version[i] for i in range(len(version))}
-            l.debug(D) 
-            l.info("Scan version")
-            for v in D:
-                l.info(v + book)
-                link = find_other_lib(D[v])
-    l.debug("all link find below")
-    for lib in link:
-        l.debug(lib)
-        bsObj = BeautifulSoup(op_simple(lib)[0],"html.parser")
-        find_library(bsObj,book)
+        D = {num[i]:version[i] for i in range(len(version))}
+        l.debug(D) 
+        l.info("Scan version")
+        for v in D:
+            l.info(v + book)
+            link = find_other_lib(D[v])
+        l.debug("all link find below")
+        for lib in link:
+            l.debug(lib)
+            bsObj = BeautifulSoup(op_simple(lib)[0],"html.parser")
+            find_library(bsObj,book)
 
 def main():
     l = mylogger(logfile,logfilelevel,get_funcname())  
@@ -411,6 +413,8 @@ if __name__=='__main__':
         main()
     except KeyboardInterrupt:
         print('ctrl + c')
+
+
 
 """
 Changelog:
