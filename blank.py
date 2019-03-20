@@ -202,12 +202,9 @@ if __name__ == '__main__':
     #     # print(os.path.join(p,f[:-4]+'c.jpg'))
     #         os.rename(fp,os.path.join(p,'VA - '+f))
 
-    ignorelist = ['因装修暂闭馆','闭馆修缮']
-    lib = ['奉贤分馆因装修暂闭馆','奉贤分馆']
-    blacklist = ['徐汇华泾镇','青浦夏阳','崇明港西镇',\
-            '浦东洋泾','浦东新区新川沙','浦东沪东新村','杨浦长白新村','杨浦四平',\
-            '奉贤分馆','闵行分馆','闵行莘庄工业区','嘉定分馆','嘉定分馆(新馆)','松江分馆','']
-
-
-    print(filter_lib('嘉分'))
- 
+  
+    rect_list = [] * 16
+    print(rect_list)
+    for i in range(16):
+        rect_list.append([] * 16)
+    print(rect_list)
