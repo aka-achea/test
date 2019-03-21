@@ -39,6 +39,7 @@ def printPlay(textStr,line,background):
             f.seek(offset)
             #从该字模数据中读取32字节数据
             font_rect = f.read(32)
+            print( font_rect )
 
         #font_rect的长度是32，此处相当于for k in range(16)
         for k in range(len(font_rect) // 2):
