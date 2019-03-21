@@ -2,15 +2,9 @@
 #coding:utf-8
 # tested in win
 
-
 import os
 from PIL import Image
 import numpy as np
-
-picfolder = r'C:\Users\chenj82.RMOASIA\Downloads\WhoKnows'
-# front = r'E:\bang.png'
-back = r'E:\blank.png'
-out = r'E:\out.jpg'
 
 base = np.array([
     [0,0,0,0,0,0,0],
@@ -58,15 +52,15 @@ H = np.array([
     [0,0,0,0,0,0,0],  ])
 
 I = np.array([
-    [0,0,0,0,0,0,0],
-    [0,0,1,1,1,0,0],
-    [0,0,0,1,0,0,0],
-    [0,0,0,1,0,0,0],
-    [0,0,0,1,0,0,0],
-    [0,0,0,1,0,0,0],
-    [0,0,0,1,0,0,0],
-    [0,0,1,1,1,0,0],
-    [0,0,0,0,0,0,0],  ])
+    [0,0,0,0,0],
+    [0,1,1,1,0],
+    [0,0,1,0,0],
+    [0,0,1,0,0],
+    [0,0,1,0,0],
+    [0,0,1,0,0],
+    [0,0,1,0,0],
+    [0,1,1,1,0],
+    [0,0,0,0,0],  ])
 
 L = np.array([
     [0,0,0,0,0,0,0],
@@ -123,24 +117,19 @@ V = np.array([
     [0,0,0,1,0,0,0],
     [0,0,0,0,0,0,0],  ])
 
+zeorarr = np.zeros(( len(base),1 )) # for concatenate array
 
-
-
-
-mapdic = { 'R':R,'O':O,'C':C,'H':H,'E':E }
+mapdic = { 'C':C,'E':E,'H':H,'I':I,'L':L,'O':O,'R':R,'U':U,'V':V }
 
 word = 'ROCHE'
+# word = word.replace(' ','_')
 
 #背景着色：  dodgerblue, FFFACD黄色 F0FFFF白 BFEFFF蓝 b7facd青色 ffe7cc浅橙色 fbccff浅紫色 d1ffb8淡绿 febec0淡红 E0EEE0灰
 colorlist = ['#1E90FF','#FFFACD','#F0FFFF','#BFEFFF','#b7facd','#ffe7cc','#fbccff','#d1ffb8','#febec0','#E0EEE0']
 #index用来改变不同字的背景颜色
 index = 0
 
-totalx = 50*( len(word)*len(base[0]) )
-totaly = 50*len(base)
-canvas = Image.new('RGB',(totalx,totaly),'#0066cc')  # 新建画布
-
-def pastepic(arr,picfolder):
+def pastepic(arr,canvas,picfolder):
     piclist = os.listdir(picfolder)
     x,y = 0,0
     count = 0
@@ -178,20 +167,29 @@ def cropresize(pic):
     return img
 
 
-zeorarr = np.zeros(( len(base),1 )) # for concatenate array
+def main(word,picfolder,out):
+    for n in range(len(word)):
+        # print(word[n])
+        if n == 0:
+            arr = mapdic[word[n]]
+        elif word[n] not in mapdic:
+            arr = np.hstack(( arr,zeorarr  ))
+        else:
+            arr = np.hstack(( arr,mapdic[word[n]][::,1:] ))
+    # arr = arr[::,1:] # remove 1st column
+    # print(arr)
 
-for n in range(len(word)):
-    if n == 0:
-        arr = np.hstack(( zeorarr,mapdic[word[n]]))
-    # elif n == len(word):
-    #     arr = np.hstack(( arr,zeorarr  ))
-    else:
-        arr = np.hstack(( arr,mapdic[word[n]] ))
+    totalx = 50*len(arr[0])
+    totaly = 50*len(arr)
+    canvas = Image.new('RGB',(totalx,totaly),'#0066cc')  # 新建画布
+    pastepic(arr,canvas,picfolder)
+    canvas.show()
+    canvas.save(out)
 
-arr = arr[::,1:]
-# print(arr)
+if __name__ == "__main__":
+    picfolder = r'C:\Users\chenj82.RMOASIA\Downloads\WhoKnows'
+    # front = r'E:\bang.png'
+    back = r'E:\blank.png'
+    out = r'E:\out.jpg'
 
-pastepic(arr,picfolder)
-
-canvas.show()
-
+    main(word,picfolder,out)
