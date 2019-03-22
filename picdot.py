@@ -5,6 +5,7 @@
 import os
 from PIL import Image
 import numpy as np
+import pyfiglet
 
 base = np.array([
     [0,0,0,0,0,0,0],
@@ -17,6 +18,13 @@ base = np.array([
     [0,0,0,0,0,0,0],
     [0,0,0,0,0,0,0],  ])
 
+heart = np.array([
+    [0,1,0,0,0,1,0],
+    [1,1,1,0,1,1,1],
+    [1,1,1,1,1,1,1],
+    [0,1,1,1,1,1,0],
+    [0,0,1,1,1,0,0],
+    [0,0,0,1,0,0,0], ])
 
 C = np.array([
     [0,0,0,0,0,0,0],
@@ -121,7 +129,8 @@ zeorarr = np.zeros(( len(base),1 )) # for concatenate array
 
 mapdic = { 'C':C,'E':E,'H':H,'I':I,'L':L,'O':O,'R':R,'U':U,'V':V }
 
-word = 'ROCHE'
+ascii_char = list("@B%8&WM*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1[]?-_+~<>i!;:,^'")
+
 # word = word.replace(' ','_')
 
 #背景着色：  dodgerblue, FFFACD黄色 F0FFFF白 BFEFFF蓝 b7facd青色 ffe7cc浅橙色 fbccff浅紫色 d1ffb8淡绿 febec0淡红 E0EEE0灰
@@ -141,7 +150,7 @@ def pastepic(arr,canvas,picfolder):
             y = 50*row
             if len(piclist) == 0:
                 piclist = os.listdir(picfolder)
-            if arr[row][col] != 1:
+            if arr[row][col] == 1:
                 count += 1
                 # print(x,y)                
                 pic = os.path.join(picfolder,piclist[0])
@@ -166,6 +175,33 @@ def cropresize(pic):
     img = img.resize((50,50),Image.LANCZOS)
     return img
 
+def figletter(word):  # create geek letter
+    result = pyfiglet.figlet_format(str(word), font = "standard"  ) 
+    print(result)
+
+def pix2char(r,b,g,alpha=256):
+    if alpha == 0:
+        return ' '
+    gray = int(0.2126*r+0.7152*g+0.0722*b)
+    unit = (256.0+1)/len(ascii_char)
+    return ascii_char[int(gray/unit)]
+
+def pic2char(img):
+    width,height = 300,300    
+    img = Image.open(img)
+    img = img.resize((width,height),Image.NEAREST)
+    txt = ""
+    for y in range(height):
+        for x in range(width):
+            txt += pix2char(*img.getpixel((x,y)))
+        txt += '\n'
+    print(txt)
+    return txt
+
+    # if out:
+    #     with open(out,'w') as f:
+    #         f.write(txt)
+
 
 def main(word,picfolder,out):
     for n in range(len(word)):
@@ -182,14 +218,23 @@ def main(word,picfolder,out):
     totalx = 50*len(arr[0])
     totaly = 50*len(arr)
     canvas = Image.new('RGB',(totalx,totaly),'#0066cc')  # 新建画布
+    bg = Image.open(back)
+    bg = bg.resize((totalx,totaly),Image.LANCZOS)
+    canvas.paste(bg,(0,0))
     pastepic(arr,canvas,picfolder)
     canvas.show()
     canvas.save(out)
 
+
 if __name__ == "__main__":
     picfolder = r'C:\Users\chenj82.RMOASIA\Downloads\WhoKnows'
     # front = r'E:\bang.png'
-    back = r'E:\blank.png'
-    out = r'E:\out.jpg'
+    back = r'E:\b.jpg'
+    outpic = r'E:\out.jpg'
+    word = 'ROCHE'    
+    # main(word,picfolder,outpic)
 
-    main(word,picfolder,out)
+    txt = pic2char(back)
+
+    with open(r"e:\out.txt",'w') as f:
+        f.write(txt)
