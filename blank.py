@@ -202,9 +202,7 @@ if __name__ == '__main__':
     #     # print(os.path.join(p,f[:-4]+'c.jpg'))
     #         os.rename(fp,os.path.join(p,'VA - '+f))
 
-  
-    rect_list = [] * 16
-    print(rect_list)
-    for i in range(16):
-        rect_list.append([] * 16)
-    print(rect_list)
+    def calb(n):
+        print(f'cb {n} inv')
+    
+    calb('u')
