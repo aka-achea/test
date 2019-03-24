@@ -194,15 +194,4 @@ if __name__ == '__main__':
     # loop.run_until_complete(test(loop))
     # loop.run_forever()
 
-    # p = r'N:\LifeTrack\CD'
-    # fi = os.listdir(p)
-    # for f in fi:
-    #     fp = os.path.join(p,f)
-    #     if os.path.isfile(fp):
-    #     # print(os.path.join(p,f[:-4]+'c.jpg'))
-    #         os.rename(fp,os.path.join(p,'VA - '+f))
-
-    def calb(n):
-        print(f'cb {n} inv')
-    
-    calb('u')
+  
