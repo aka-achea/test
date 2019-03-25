@@ -232,9 +232,9 @@ if __name__ == "__main__":
     back = r'E:\b.jpg'
     outpic = r'E:\out.jpg'
     word = 'ROCHE'    
-    # main(word,picfolder,outpic)
+    main(word,picfolder,outpic)
 
-    txt = pic2char(back)
+    # txt = pic2char(back)
 
-    with open(r"e:\out.txt",'w') as f:
-        f.write(txt)
+    # with open(r"e:\out.txt",'w') as f:
+    #     f.write(txt)
