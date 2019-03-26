@@ -40,7 +40,7 @@ link = set() #link to library list of different pages
 D = {}
 fail = []
 masterpath = 'E:\\UT\\'
-logfilelevel = 10
+= 10
 logfile = masterpath+'library.log'
 database = masterpath+'library.db'
 wishlist = masterpath+'library.ini'
@@ -69,7 +69,7 @@ PW = 出版者
 
 
 def modificate(text):
-    l = mylogger(logfile,logfilelevel,get_funcname()) 
+    ml = mylogger(logfile,get_funcname()) 
     #file_name = re.sub(r'\s*:\s*', u' - ', file_name)    # for FAT file system
     text = str(text)
     before = text
@@ -78,8 +78,8 @@ def modificate(text):
     #file_name = file_name.replace('$', '\\$')    # for command, see issue #7
     after = text
     if before != after :
-        l.debug("Before modify >>>> "+before)
-        l.debug("After modify >>>> "+after)
+        ml.debug("Before modify >>>> "+before)
+        ml.debug("After modify >>>> "+after)
     return text
 
 def filter_lib(lib):
@@ -95,22 +95,22 @@ def filter_lib(lib):
 
 class db():
     def create(self):
-        l = mylogger(logfile,logfilelevel,get_funcname()) 
+        ml = mylogger(logfile,get_funcname()) 
         conn = sqlite3.connect(database)
         cursor = conn.cursor()
         cmd = 'create table inventory (SN varchar(20) primary key,\
                         book varchar(20),lib varchar(20),cat varchar(20)  )'
-        l.debug(cmd)
+        ml.debug(cmd)
         cursor.execute(cmd)
         cursor.close()
         conn.close()
 
     def lib(self,lib):
-        l = mylogger(logfile,logfilelevel,get_funcname())        
+        ml = mylogger(logfile,get_funcname())        
         conn = sqlite3.connect(database)
         cursor = conn.cursor()
         # cmd = 
-        # l.debug(cmd)
+        # ml.debug(cmd)
         cursor.execute('select distinct book as 图书, cat as 索书号 from inventory \
                         where lib = ? order by book' , (lib,))
         v = from_db_cursor(cursor)
@@ -119,9 +119,9 @@ class db():
         return v
 
     def all(self):
-        l = mylogger(logfile,logfilelevel,get_funcname())          
-        l.info(">>>>>>>显示所有图书<<<<<<<")
-        l.info("="*26)
+        ml = mylogger(logfile,get_funcname())          
+        ml.info(">>>>>>>显示所有图书<<<<<<<")
+        ml.info("="*26)
         conn = sqlite3.connect(database)
         cursor = conn.cursor()
         cursor.execute('select lib as 图书馆,book as 书,SN,cat as 索书号 from inventory ')
@@ -131,9 +131,9 @@ class db():
         return v
 
     def sum(self):
-        l = mylogger(logfile,logfilelevel,get_funcname())          
-        l.info(">>显示书种类最多的图书馆<<")
-        l.info("="*26)
+        ml = mylogger(logfile,get_funcname())          
+        ml.info(">>显示书种类最多的图书馆<<")
+        ml.info("="*26)
         conn = sqlite3.connect(database)
         cursor = conn.cursor()
         cursor.execute('select lib as 图书馆,count(distinct(book)) as 本 from inventory \
@@ -144,9 +144,9 @@ class db():
         return v
 
     def book(self,book):
-        l = mylogger(logfile,logfilelevel,get_funcname())          
-        l.info(">>>>显示有此书的图书馆<<<<")
-        l.info("="*26)
+        ml = mylogger(logfile,get_funcname())          
+        ml.info(">>>>显示有此书的图书馆<<<<")
+        ml.info("="*26)
         conn = sqlite3.connect(database)
         cursor = conn.cursor()
         cursor.execute('select distinct lib as 图书馆, book as 书,cat as 索书号 from inventory \
@@ -157,65 +157,65 @@ class db():
         return v
 
     def listbook(self):
-        l = mylogger(logfile,logfilelevel,get_funcname())          
-        l.info(">>>>显示找到的图书列表<<<<")
-        l.info("="*26)
+        ml = mylogger(logfile,get_funcname())          
+        ml.info(">>>>显示找到的图书列表<<<<")
+        ml.info("="*26)
         conn = sqlite3.connect(database)
         cursor = conn.cursor()
         cursor.execute('select distinct book, cat from inventory')
         values = cursor.fetchall()
-        for i in values: l.info(i)
+        for i in values: ml.info(i)
         cursor.close()
         conn.close()
 
 # @dec  #return version,num
 def find_book_ver(queryapi,book,author=''):
-    l = mylogger(logfile,logfilelevel,get_funcname())  
+    ml = mylogger(logfile,get_funcname())  
     para = [('menu','search'),
         ('index','.TW'),
         ('term',book),
         ('index','.AW'),
         ('term',author)]
-    l.debug(para)    
+    ml.debug(para)    
     try:
         # global version,num
         version,num = [],[]
         html = op_requests(url=queryapi,para=para)
-        l.debug(html.url)
+        ml.debug(html.url)
         bsObj = BeautifulSoup(html.content,"html.parser")
         nobook = bsObj.find_all(string=re.compile("对不起"))
         if nobook: # not find any book
-            l.err("对不起, 不能找到任何命中书目")
+            ml.err("对不起, 不能找到任何命中书目")
             return version,num  # all none
         else:
             vbook = bsObj.find_all("a",{"class":"mediumBoldAnchor"})
             if vbook: # mediumBoldAnchor >= 1 , different version find, only scan 1st page
-                l.debug('Find book version below')
+                ml.debug('Find book version below')
                 for v in vbook:
-                    l.debug(v)
+                    ml.debug(v)
                     bookname = str(v).split('<')[1].split('>')[-1].strip()
-                    # l.info(bookname)
+                    # ml.info(bookname)
                     if bookname == book:
                         n = v
                         for i in range(7): n = n.parent                  
-                        # l.debug(n)
+                        # ml.debug(n)
                         n = n.previous_sibling.text.strip()
-                        # l.debug(n)  # sample n :  "1."
-                        l.verbose(n+bookname)
+                        # ml.debug(n)  # sample n :  "1."
+                        ml.verbose(n+bookname)
                         num.append(n)
-                        l.verbose(v["href"])
+                        ml.verbose(v["href"])
                         version.append(v["href"])
                     else:
-                        l.info(bookname+' not match')
+                        ml.info(bookname+' not match')
                         #sys.exit()
                         # pass
                 if version == []: #there is book, but no name match
-                    l.error("都不符合，请确认书名")
+                    ml.error("都不符合，请确认书名")
                     return version,num  # all none
                 # else:
                 #     for i in version : l.debug(i)
             else: # mediumBoldAnchor = 0 , search directly
-                l.debug("没其他版本，直接搜!")
+                ml.debug("没其他版本，直接搜!")
                 version = 1
                 num = html.url
                 return version, num
@@ -225,7 +225,7 @@ def find_book_ver(queryapi,book,author=''):
 
 # @dec #return other library link
 def find_other_lib(v):
-    l = mylogger(logfile,logfilelevel,get_funcname())      
+    ml = mylogger(logfile,get_funcname())      
     try:
         global link
         #bookname = bsObj.find("a",{"class":"largeAnchor"})
@@ -236,34 +236,34 @@ def find_other_lib(v):
         while T != 0:  #find other library
             # html = op_simple(v)[0]
             html = op_requests(v)
-            l.debug(html.url)
+            ml.debug(html.url)
             bsObj = BeautifulSoup(html.content,"html.parser")
             other = bsObj.find("input",{"value":"其它馆址"})
-            l.verbose(other)
+            ml.verbose(other)
             if other :
                 T = 0
             else:
                 T = T - 1
-                l.error("重新加载网页...")
+                ml.error("重新加载网页...")
                 mywait(10)
         ol = (str(other).split(" "))
-        l.debug(ol)
+        ml.debug(ol)
         try:
             other_lib = modificate(ol[2][30:-2])
-            l.debug("Other lib is : ")
-            l.debug(other_lib)
+            ml.debug("Other lib is : ")
+            ml.debug(other_lib)
             link.add(other_lib)
             #go to other_lib
             html = op_requests(other_lib)
-            l.debug(html.url)
+            ml.debug(html.url)
             bsObj = BeautifulSoup(html.content,"html.parser")
             # find more page of other lib
             lk = bsObj.find_all(href=re.compile("staffonly=$"))
             for i in lk :  link.add(i["href"])
-            l.debug("Other lib list : ")
-            l.debug(link)
+            ml.debug("Other lib list : ")
+            ml.debug(link)
         except IndexError as e:
-            l.error("没有其他馆址")
+            ml.error("没有其他馆址")
     except AttributeError as e:
         print(e)
     #time.sleep(3)
@@ -274,23 +274,23 @@ def find_other_lib(v):
 #馆址	馆藏地	索书号	状态	应还日期 馆藏类型 馆藏条码
 # @dec
 def find_library(bsObj,book):
-    l = mylogger(logfile,logfilelevel,get_funcname())  
+    ml = mylogger(logfile,get_funcname())  
     global D, fail
     conn = sqlite3.connect(database)
     cursor = conn.cursor()
 
     for i in bsObj.find_all("tr",{"height":"15"}):
         status = i.td.next_sibling.next_sibling.next_sibling.text
-        l.verbose("="*10)
+        ml.verbose("="*10)
         if status == "归还":
             library = i.td
-            l.verbose("馆址:"+library.text)
+            ml.verbose("馆址:"+library.text)
             lib = library.text
             if filter_lib(lib) == True:       
                 room = library.next_sibling
-                l.verbose("馆藏地:"+room.text)
+                ml.verbose("馆藏地:"+room.text)
                 catalog = room.next_sibling
-                l.verbose("索引号:"+catalog.text)
+                ml.verbose("索引号:"+catalog.text)
                 cat = catalog.text
                 if bsObj.find(title="应还日期") :
                     #print("find 应还日期")
@@ -300,20 +300,20 @@ def find_library(bsObj,book):
                 else:
                     btype = room.next_sibling.next_sibling.next_sibling
                 # bt = btype.text
-                l.verbose("馆藏类型:"+btype.text)
+                ml.verbose("馆藏类型:"+btype.text)
                 label = btype.next_sibling
-                l.verbose("馆藏条码:"+label.text)
+                ml.verbose("馆藏条码:"+label.text)
                 SN = label.text
 
                 if btype.text == "普通外借资料":
                     try:
                         cursor.execute("insert into inventory values (?,?,?,?)", (SN,book,lib,cat))
                     except sqlite3.IntegrityError as e:
-                        l.verbose(e)
-                        l.error("Duplicate: "+SN+" "+book+" "+lib)
+                        ml.verbose(e)
+                        ml.error("Duplicate: "+SN+" "+book+" "+lib)
 
         else:
-            l.info(status)
+            ml.info(status)
 
     cursor.close()
     conn.commit()
@@ -321,34 +321,34 @@ def find_library(bsObj,book):
 
 # @dec
 def single(book,author=''):
-    l = mylogger(logfile,logfilelevel,get_funcname())  
-    l.info("搜寻图书："+book)
+    ml = mylogger(logfile,get_funcname())  
+    ml.info("搜寻图书："+book)
     if author:
-        l.info("作者："+author)
+        ml.info("作者："+author)
     version,num = find_book_ver(queryapi,book,author)
     if version == 1:        
         link = find_other_lib(num)
         for lib in link:
-            l.debug(lib)
+            ml.debug(lib)
             bsObj = op_simple(link)[0]
             find_library(bsObj,book)
     elif version == []:
         pass
     else:
         D = {num[i]:version[i] for i in range(len(version))}
-        l.debug(D) 
-        l.info("Scan version")
+        ml.debug(D) 
+        ml.info("Scan version")
         for v in D:
-            l.info(v + book)
+            ml.info(v + book)
             link = find_other_lib(D[v])
-        l.debug("all link find below")
+        ml.debug("all link find below")
         for lib in link:
-            l.debug(lib)
+            ml.debug(lib)
             bsObj = BeautifulSoup(op_simple(lib)[0],"html.parser")
             find_library(bsObj,book)
 
 def main():
-    l = mylogger(logfile,logfilelevel,get_funcname())  
+    ml = mylogger(logfile,get_funcname())  
     parser = argparse.ArgumentParser(description = 'Library search tool')
     group = parser.add_mutually_exclusive_group()
     group.add_argument('-m','--multiple',help='Search multiple books',action='store_true')
@@ -366,43 +366,43 @@ def main():
         single(book,args.author if args.author else '')
       
     elif args.multiple == True:
-        l.info('Search multiple books')
+        ml.info('Search multiple books')
         with open(wishlist, 'r') as w:
             for i in w:
                 book = i.strip()
                 single(book)
     
     elif args.clean == True:
-        l.info('Clean up database')
+        ml.info('Clean up database')
         if os.path.isfile(database): os.remove(database)
         r = db()
         r.create()
 
     elif args.q == 'a':
-        l.info('all find')
+        ml.info('all find')
         r = db()
         v = r.all()
-        l.info(v.get_string(fields = ['图书馆','书','SN','索书号']))
+        ml.info(v.get_string(fields = ['图书馆','书','SN','索书号']))
 
     elif args.q == 's':
         book = input('>>')
-        l.info('Search : '+book)
+        ml.info('Search : '+book)
         r = db()
         v = r.book(book)
-        l.info(v.get_string(fields = ['图书馆','索书号']))
+        ml.info(v.get_string(fields = ['图书馆','索书号']))
 
     elif args.q == 'l':
         lib = input('>>')
-        l.info(lib)
+        ml.info(lib)
         r = db()
         v = r.lib(lib)
-        l.info(v.get_string(fields = ['图书','索书号']))
+        ml.info(v.get_string(fields = ['图书','索书号']))
 
     elif args.q == 'b':
         # print('best')
         r = db()
         v = r.sum()
-        l.info(v.get_string(fields = ['图书馆','本']))
+        ml.info(v.get_string(fields = ['图书馆','本']))
 
     else:
         parser.print_help()
