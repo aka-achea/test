@@ -193,5 +193,18 @@ if __name__ == '__main__':
     # loop = asyncio.get_event_loop()
     # loop.run_until_complete(test(loop))
     # loop.run_forever()
+    ignorelist = ['闭馆']
+    blacklist = ['徐汇华泾镇','青浦夏阳','崇明港西镇',\
+                '浦东洋泾','浦东新区新川沙','浦东沪东新村','杨浦长白新村','杨浦四平',\
+                '奉贤分馆','闵行分馆','闵行莘庄工业区','嘉定分馆','嘉定分馆(新馆)','松江分馆','']
+    whitelist = ['普陀分馆','黄浦分馆','静安区图书馆(新闸路)','普陀宜川']
+    def wantedlib(lib): # remove black list
+    #  map(lambda x:re.search(x,lib),ignorelist) :
+        for s in ignorelist:
+            if re.findall(s,lib):
+                return False
+        return False if lib in blacklist else True
 
-  
+
+    lib = '闭馆ds'
+    print(wantedlib(lib))
