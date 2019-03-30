@@ -1,11 +1,9 @@
 #!/usr/bin/python
 #coding:utf-8
 
-#每天听6小时，中等质量MP3
 
-def mp3calc():
-    day = 10
-
+def mp3calc(day):
+    #每天听6小时，中等质量MP3
     albumnum = int(day)*6*60/4/12
     size = str(int(day)*6*60/1024)+'GB'
 
@@ -23,4 +21,4 @@ def profit():
     print(profit)
 
 if __name__ == "__main__":
-    mp3calc()
+    mp3calc(10)

@@ -1,7 +1,8 @@
-﻿#!/usr/bin/python
+﻿#!/usr/bin/python3
 #coding:utf-8
+#tested in win
 """
-SCAN eBOOK
+SCAN eBOOK on kindle
 """
 
 import time , os
@@ -11,7 +12,7 @@ path = 'E:\\SIR\\book'
 name = input('Book Name: ')
 pages = input('Total page: ')
 bp = os.path.join(path,name)
-if os.path.isdir(bp) == True:
+if os.path.isdir(bp):
     print('Book folder exist')
 else:
     os.mkdir(bp)
