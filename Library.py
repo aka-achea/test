@@ -211,7 +211,7 @@ def find_book_ver(queryapi,book,author=''):
                         return None  # all none
             else: # mediumBoldAnchor = 0 , search directly
                 ml.debug("没其他版本，直接搜!")
-                vdict['0.'] = html.url             
+                vdict['0.'] = html.url  
     except AttributeError as e:
         print(e)
     ml.debug(vdict)
