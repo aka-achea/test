@@ -8,11 +8,9 @@ import pytesseract
 import os
 
 
+pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+# pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe"
 
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe"
-
-path = r'E:\jj'
-output = r'E:\jj\out.txt'
 threshold = 120
 
 def initTable(threshold=150):
@@ -28,7 +26,7 @@ def initTable(threshold=150):
 def readimg(imgpath,threshold):
     # print(img)
     im = Image.open(imgpath).convert('L')  #灰度图 
-    im.show()
+    # im.show()
     ni = im.point(initTable(threshold),'1')
     # ni.save(out,'jpeg')
     ni.show()
@@ -36,7 +34,7 @@ def readimg(imgpath,threshold):
     # print(t)
     return text
 
-def main():
+def myocr_pil(path):
     for j in os.listdir(path):
         imgpath = os.path.join(path,j)
         text = readimg(imgpath,threshold)
@@ -48,4 +46,6 @@ def main():
 #         writer.writerow(ddict[i+1])
 
 if __name__ == "__main__":
-    main()
+    path = r'M:\MyProject\ocr'
+    output = r'E:\jj\out.txt'
+    myocr_pil(path)
