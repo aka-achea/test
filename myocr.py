@@ -6,7 +6,8 @@
 from PIL import Image
 import pytesseract
 import os
-
+import cv2
+import 
 
 pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 # pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe"
@@ -23,7 +24,7 @@ def initTable(threshold=150):
     return table
 
 
-def readimg(imgpath,threshold):
+def readimg_pil(imgpath,threshold):
     # print(img)
     im = Image.open(imgpath).convert('L')  #灰度图 
     # im.show()
@@ -37,7 +38,7 @@ def readimg(imgpath,threshold):
 def myocr_pil(path):
     for j in os.listdir(path):
         imgpath = os.path.join(path,j)
-        text = readimg(imgpath,threshold)
+        text = readimg_pil(imgpath,threshold)
         print(text)
 
 # with open(out,'w',newline='',encoding='utf8') as c:
