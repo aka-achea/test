@@ -14,7 +14,8 @@ from mylog import mylogger,get_funcname
 from openlink import op_simple
 
 logfile = 'db.log'
-workfolder = r"M:\MyProject\Douban"
+# workfolder = r"M:\MyProject\Douban"
+workfolder = r'E:\UT\douban'
 os.chdir(workfolder)
 
 headers = {
@@ -44,7 +45,7 @@ def download(file_url, file_name):
     # open in binary mode
     with open(file_name, "wb") as file:
         # get request
-        response = requests.get(file_url)
+        response = requests.get(file_url,verify=False)
         # write to file
         file.write(response.content)
 
