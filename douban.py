@@ -13,9 +13,10 @@ from bs4 import BeautifulSoup
 from mylog import mylogger,get_funcname
 from openlink import op_simple
 
+requests.packages.urllib3.disable_warnings()
 logfile = 'db.log'
-# workfolder = r"M:\MyProject\Douban"
-workfolder = r'E:\UT\douban'
+workfolder = r"M:\MyProject\Douban"
+# workfolder = r'E:\UT\douban'
 os.chdir(workfolder)
 
 headers = {
@@ -85,7 +86,7 @@ def get_page_list(url):
             bsObj = BeautifulSoup(op_simple(link)[0],"html.parser") #;print(bsObj)
             next_page = bsObj.find("span",{"class":"next"}).link["href"]
             page_list.add(link)
-            l.debug(next_page)
+            ml.debug(next_page)
         except:
             err = 1
             link = url + next_page
