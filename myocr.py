@@ -5,7 +5,7 @@
 from matplotlib import pyplot as plt
 from PIL import Image
 import pytesseract
-import os
+import os,sys
 import cv2
 import difflib
 import numpy as np
@@ -72,38 +72,55 @@ def cv2plt(img):
     b,g,r = cv2.split(img)
     return cv2.merge([r,g,b])
 
-def myocr_cv(pic):
+def myocr_cv(pic,book=False):
     img = cv2.imread(pic,0)        #灰度图
-    img = denoise_cv_med(img,5)    #中值消噪    
-    # img = denoise_cv_bilat(img)    #双边过滤
-    img = denoise_cv_gaus(img,5)   #高斯过滤
-    img = denoise_cv_bilat(img)    #双边过滤
-    # img = denoise_cv_med(img,5)    #中值消噪   
-    img = denoise_cv_gausthrold(img)    #高斯二值化               
-    img = denoise_cv_gaus(img,5)   #高斯过滤
+
+    if book == True:
+        img = denoise_cv_med(img,5)    #中值消噪    
+        img = denoise_cv_gaus(img,5)   #高斯过滤
+        img = denoise_cv_bilat(img)    #双边过滤
+        img = denoise_cv_gausthrold(img)    #高斯二值化               
+        img = denoise_cv_gaus(img,5)   #高斯过滤
+        img = denoise_cv_med(img,5)    #中值消噪   
+
     # img = denoise_cv_bilat(img)    #双边过滤
     # ret,img = cv2.threshold(img,127,255,cv2.THRESH_BINARY)
 
     # cv2.imshow('denoised',img)
     # cv2.waitKey(0)
     # cv2.destroyAllWindows()
+ 
+    print('='*10)
+    text = pytesseract.image_to_string(img,lang='chi_sim')
+    text = remove_emptyline(text)
+    print(text)
 
     # plt.imshow(img,'gray')
     # plt.xticks([]),plt.yticks([])
     # plt.show()
-    print('='*10)
-    text = pytesseract.image_to_string(img,lang='chi_sim')
-    text = remove_emptyline(text)
+
     return text
 
-    
+def main():
+    # print(len(sys.argv))
+    if len(sys.argv) == 1:
+        book = False
+    elif sys.argv[1] == 'b':
+        book = True
+    else:
+        book = False    
+
+    pic = input(">>")
+    text = myocr_cv(pic,book)
+
+
 
 if __name__ == "__main__":
     path = r'M:\MyProject\ocr'
     output = r'E:\jj\out.txt'
-
-    pic = r'M:\MyProject\ocr\IMG_9507.JPG'
+    
+    main()
+    # pic = r'M:\MyProject\ocr\IMG_9507.JPG'
     # tpil = readimg_pil(pic,threshold)
-    text = myocr_cv(pic)
-    print(text)
+
 
