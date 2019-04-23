@@ -14,7 +14,7 @@ import requests
 
 # customized module
 from mylog import mylogger,get_funcname
-from openlink import op_requests
+from openlink import op_requests,ran_header
 # from mytool import mywait
 
 # headers = {
@@ -170,7 +170,7 @@ def find_book_ver(queryapi,book,author=''):
     ml.debug(para)    
     try:
         vdict = {} # version dictionary
-        html = op_requests(url=queryapi,para=para)
+        html = op_requests(url=queryapi,para=para,header=ran_header())
         ml.debug(html.url)
         bsObj = BeautifulSoup(html.content,"html.parser")
         nobook = bsObj.find_all(string=re.compile("对不起"))
@@ -224,7 +224,7 @@ def find_other_lib(weblink):
     global link
     try:
         #find other library tag  op_requests
-        bsObj = BeautifulSoup(op_requests(weblink).content,"html.parser")
+        bsObj = BeautifulSoup(op_requests(weblink,header=ran_header()).content,"html.parser")
         other = bsObj.find("input",{"value":"其它馆址"})
         if other :
             ml.debug(other)
@@ -234,7 +234,7 @@ def find_other_lib(weblink):
             ml.debug(f"Other lib is -->  {other_lib}")
             link.add(other_lib)
             #go to other_lib
-            bsObj = BeautifulSoup(op_requests(other_lib).content,"html.parser")
+            bsObj = BeautifulSoup(op_requests(other_lib,header=ran_header()).content,"html.parser")
             more_other_lib(bsObj)
             # except IndexError as e:
             #     ml.error(e)
@@ -261,7 +261,7 @@ def find_library(liblink,book):
     conn = sqlite3.connect(database)
     cursor = conn.cursor()
 
-    bsObj = BeautifulSoup(op_requests(liblink).content,"html.parser")
+    bsObj = BeautifulSoup(op_requests(liblink,header=ran_header()).content,"html.parser")
     for i in bsObj.find_all("tr",{"height":"15"}):
         ml.debug('='*10)
         library = i.td
