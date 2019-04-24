@@ -6,7 +6,7 @@
 import openpyxl
 
 s = r'D:\Profile\Desktop\wt.txt'
-xl = r'J:\DOC\我的坚果云\stock.xlsx'
+xl = r'E:\UT\stock.xlsx'
 
 # xl = r'C:\D\JG\我的坚果云\newstock.xlsx'
 # s = r'C:\D\JG\我的坚果云\wt.txt'
@@ -14,7 +14,7 @@ xl = r'J:\DOC\我的坚果云\stock.xlsx'
 #印花税：单向收取，卖出成交金额的千分之一（1‰）。 
 #过户费：按成交股票的金额×0.02‰收取，单位：元。双向收取（仅上海股票收取）。
 #手续费： 5元 
-
+#对账单
 
 def readtransaction(s):
     with open(s,'r') as f:
