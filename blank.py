@@ -20,11 +20,64 @@ import win32clipboard as wincld
 
 
 
-
-txt = 'a1a1a1.live | a2a2a2.live | a3a3a3.live | gygygy.live | kgkgkg.live | nenene.live | bababa.live | bububu.live | gagaga.live | hehehe.live | 174.127.195.66 | 174.127.195.69 | 174.127.195.98 | 174.127.195.102 | 174.127.195.176 | 174.127.195.178 | 174.127.195.201 | 174.127.195.183 | 174.127.195.186 | 174.127.195.188 | 174.127.195.173 | 174.127.195.187 | 174.127.195.182 | 174.127.195.184 | 174.127.195.171 | 174.127.195.166 | 174.127.195.226 | 67.220.90.10 | 67.220.90.4 | 67.220.90.20 | 67.220.90.15 | 174.127.195.213 | 174.127.195.190 | 174.127.195.198 | 174.127.195.205 | a.1u2u3u4u.com'
-
 def buildiplist(txt):
     iplist = re.split(' \| ',txt)
     return iplist
 
-print(buildiplist(txt))
+
+
+
+from sqlalchemy import Column, DateTime, String, Integer, ForeignKey, func
+from sqlalchemy.orm import relationship, backref
+from sqlalchemy.ext.declarative import declarative_base
+ 
+ 
+Base = declarative_base()
+ 
+ 
+class Department(Base):
+    __tablename__ = 'department'
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+ 
+ 
+class Employee(Base):
+    __tablename__ = 'employee'
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+    # Use default=func.now() to set the default hiring time
+    # of an Employee to be the current time when an
+    # Employee record was created
+    hired_on = Column(DateTime, default=func.now())
+    department_id = Column(Integer, ForeignKey('department.id'))
+    # Use cascade='delete,all' to propagate the deletion of a Department onto its Employees
+    department = relationship(
+        Department,
+        backref=backref('employees',
+                         uselist=True,
+                         cascade='delete,all'))
+ 
+ 
+from sqlalchemy import create_engine
+engine = create_engine('sqlite:///orm_in_detail.sqlite')
+ 
+from sqlalchemy.orm import sessionmaker
+session = sessionmaker()
+session.configure(bind=engine)
+Base.metadata.create_all(engine)
+
+d = Department(name="IT")
+emp1 = Employee(name="John", department=d)
+s = session()
+s.add(d)
+s.add(emp1)
+s.commit() 
+
+
+s.query(Employee).all()
+
+
+
+
+
+
