@@ -62,14 +62,25 @@ class db():
         return self.session.query(Tag).filter_by(name=tagname).first().id
 
     def query_userid(self,username):
-        return self.session.query(Tag).filter_by(name=username).first().id
+        return self.session.query(User).filter_by(name=username).first().id
 
     def query_srcid(self,sourcename):
-        return self.session.query(Tag).filter_by(name=sourcename).first().id
+        return self.session.query(Source).filter_by(name=sourcename).first().id
 
+    def query_article(self,title):
+        return self.session.query(Article).filter_by(title=title).all()
 
+    def insert_article(self,article_dict):
+        timestamp = article_dict['timestamp']
+        title = article_dict['title']
+        tagid = self.query_tagid(article_dict['tag'])
+        userid = self.query_userid(article_dict['user'])
+        link = article_dict['link']
+        src_id = self.query_srcid(article_dict['source'])
+        article = Article(timestamp=timestamp,title=title,tag_id=tagid,user_id=userid,link=link,src_id=src_id)
+        self.session.add(article)
+        self.session.commit()
 
-    # def insert_article(self,)
 
 def test(session):
     # test case
@@ -149,7 +160,13 @@ if __name__ == "__main__":
     # t = session.query(Tag).all()
     
     s = db(dbfile)
-    a = s.query_tagid('gesgs')
-    print(a)
 
-    a4 = {}
+    # a4 = Article(timestamp=,title='a1',tag_id=tagid,user_id=userid,link='111',src_id=srcid)
+
+    a5 = {'timestamp':func.now(),'title':'testtitle','tag':'gesgs','user':'u2','link':'aaaaa','source':'mm'}
+    s.insert_article(a5)
+    t = s.query_article('testtitle')
+    print(t)
+    # for x in t:
+    #     print(x.link)
+    # print(a5['tag'])
