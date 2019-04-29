@@ -51,8 +51,7 @@ class Article(Base):
     def __repr__(self):
         return f'<{self.title} : {self.tag.name} : {self.user.name}>'
 
-
-class db():
+class DataBase():
     def __init__(self,dbfile):
         engine = create_engine(r'sqlite:///'+dbfile)
         DBSession = sessionmaker(bind=engine)
@@ -69,11 +68,26 @@ class db():
 
     def query_article_bytitle(self,user,title):
         u = self.session.query(User).filter_by(name=user).first()
+        articles = []
         for f in u.articles:
             if title in f.title:
-                print(f)
+                articles.append(f)
+        return articles
 
-        # return self.session.query(Article).filter_by(title=title).all()
+    def insert_src(self,sourcename):
+        s = Source(name=sourcename)
+        self.session.add(s)
+        self.session.commit()
+
+    def insert_tag(self,tagname):
+        t = Tag(name=tagname)
+        self.session.add(t)
+        self.session.commit()   
+
+    def insert_user(self,email,username):
+        u = User(email=email,name=username)
+        self.session.add(u)
+        self.session.commit()  
 
     def insert_article(self,article_dict):
         timestamp = article_dict['timestamp']
@@ -89,63 +103,28 @@ class db():
 
 def test(session):
     # test case
-    tag1 = Tag(name='GgG')
-    tag2 = Tag(name='t2')  
-    u1 = User(email='u1@h.com',name='u1')
-    u2 = User(email='u2@h.com',name='u2')
-    s1 = Source(name='wx')
-    s2 = Source(name='mm')
+    db = DataBase(dbfile)
+    for x in ['t1','t2','t3']:
+        db.insert_tag(x)
+    for s in ['wx','mm']:
+        db.insert_src(s)
+    for u in [('u1@h.com','u1'),('u2@h.com','u2')]:
+        db.insert_user(email=u[0],username=u[1])
 
-    for x in [tag1,tag2,u1,u2,s1,s2]:
-        session.add(x)
-    session.commit()
-    t = session.query(Tag).all()
+    t = db.session.query(Tag).all()
     print(t)
-    u = session.query(User).all()
+    u = db.session.query(User).all()
     print(u)
-    s = session.query(Source).all()
+    s = db.session.query(Source).all()
     print(s)
 
-    atid = session.query(Tag).filter_by(name='GgG').first().id
-    auid = session.query(User).filter_by(name='u1').first().id
-    asid = session.query(Source).filter_by(name='wx').first().id
-    a1 = Article(timestamp=func.now(),title='a1',tag_id=atid,user_id=auid,link='111',src_id=asid)
-
-    atid = session.query(Tag).filter_by(name='t2').first().id
-    auid = session.query(User).filter_by(name='u2').first().id
-    asid = session.query(Source).filter_by(name='mm').first().id
-    a2 = Article(timestamp=func.now(),title='a2',tag_id=atid,user_id=auid,link='222',src_id=asid)
-
-    atid = session.query(Tag).filter_by(name='t2').first().id
-    auid = session.query(User).filter_by(name='u1').first().id
-    asid = session.query(Source).filter_by(name='wx').first().id
-    a3 = Article(timestamp=func.now(),title='a3',tag_id=atid,user_id=auid,link='333',src_id=asid)
-
-    for x in [a1,a2,a3]:
-        session.add(x)
-    session.commit()
-    a = session.query(Article).all()
+    a1 = {'timestamp':func.now(),'title':'testtitle','tag':'t1','user':'u2','link':'aaaaa','source':'mm'}
+    db.insert_article(a1)
+    a = db.query_article_bytitle('u2','test')
     print(a)
 
-    a1 = session.query(Article).filter_by(title='a1').first()
-    print(a1.tag.name)
-    print(a1.user.name)
-    print('='*10)
-
-    u1 = session.query(User).filter_by(name='u1').first()
-    al = u1.articles
-    for x in al:
-        print(x.title)
-    print('='*10)
-
-    t2 = session.query(Tag).filter_by(name='t2').first()
-    for x in t2.articles:
-        print(x.title)
-    print('='*10)
-
-    wx = session.query(Source).filter_by(name='wx').first()
-    for x in wx.articles:
-        print(x.title)
+    for x in a:
+        print(x.link)
 
 if __name__ == "__main__":
     import os
@@ -159,19 +138,5 @@ if __name__ == "__main__":
 
     # test(session)
 
-    # tag3 = Tag(name='gesgs') 
-    # session.add(tag3)
-    # session.commit()
-    # t = session.query(Tag).all()
-    
-    s = db(dbfile)
+ 
 
-    # a4 = Article(timestamp=,title='a1',tag_id=tagid,user_id=userid,link='111',src_id=srcid)
-
-    # a5 = {'timestamp':func.now(),'title':'testtitle','tag':'gesgs','user':'u2','link':'aaaaa','source':'mm'}
-    # s.insert_article(a5)
-    t = s.query_article_bytitle('u2','tttitle')
-    print(t)
-    # for x in t:
-    #     print(x.link)
-    # print(a5['tag'])
