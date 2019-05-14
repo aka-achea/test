@@ -12,18 +12,10 @@ def merge_json(jsonlist):
 
 
 if __name__ == "__main__":
-    # j1 = {'o1':1,'o2':2}
-    # # j2 = {'o1':1,'o2':2}
+    j1 = {'o1':1,'o2':2}
+    # j2 = {'o1':1,'o2':2}
 
-    # jl = [j1]
-    # a = json.dumps(jl, indent=2)
-    # print(a)
+    jl = [j1]
+    a = json.dumps(jl, indent=2)
+    print(a)
     # print(type(a))
-
-    import pyautogui as auto
-
-    f9pic = r'c:\D\GitHub\f9\F9.png'
-
-    button = auto.locateCenterOnScreen(f9pic,grayscale=True)
-
-    print(button)
