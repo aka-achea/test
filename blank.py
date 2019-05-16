@@ -1,21 +1,8 @@
-#!/usr/bin/env python
-#coding:utf-8
-#tested in win
+from multiprocessing import Pool
 
-import json
+def f(x):
+    return x*x
 
-
-def merge_json(jsonlist):
-    return json.dumps(jsonlist, indent=2)
-
-
-
-
-if __name__ == "__main__":
-    j1 = {'o1':1,'o2':2}
-    # j2 = {'o1':1,'o2':2}
-
-    jl = [j1]
-    a = json.dumps(jl, indent=2)
-    print(a)
-    # print(type(a))
+if __name__ == '__main__':
+    with Pool(5) as p:
+        print(p.map(f, [1, 2, 3]))
