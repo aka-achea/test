@@ -1,8 +1,12 @@
-from multiprocessing import Pool
+import PySimpleGUI as sg      
 
-def f(x):
-    return x*x
+window_rows = [[sg.Text('SHA-1 and SHA-256 Hashes for the file')],      
+                 [sg.InputText(), sg.FileBrowse()],      
+                 [sg.Submit(), sg.Cancel()]]      
 
-if __name__ == '__main__':
-    with Pool(5) as p:
-        print(p.map(f, [1, 2, 3]))
+window = sg.Window('SHA-1 & 256 Hash', window_rows)    
+
+event, values = window.Read()    
+window.Close()
+
+source_filename = values[0]    
