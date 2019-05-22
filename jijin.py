@@ -7,10 +7,12 @@ from PIL import Image
 import pytesseract,math,os ,csv,codecs
 from prettytable import PrettyTable 
 
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe"
+# ocr = r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe"
+ocr = r'C:\Users\chenj82\AppData\Local\Tesseract-OCR\tesseract.exe'
+pytesseract.pytesseract.tesseract_cmd =ocr
 
-path = r'M:\MyProject\JiJin'
-cf = r'M:\MyProject\JiJin\j.csv'
+path = r'E:\UT\JiJin'
+cf = r'E:\UT\JiJin\j.csv'
 threshold = 189
 
 
