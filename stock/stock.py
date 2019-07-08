@@ -2,10 +2,13 @@
 #coding:utf-8
 # test in Win
 
-import openpyxl, argparse
+import openpyxl, argparse, time,os
+import pyautogui as auto
 
-s = r'D:\Profile\Desktop\wt.txt'
 xls = r'E:\UT\stock.xlsx'
+wp = os.path.dirname(os.path.realpath(__file__))
+wt = r'D:\Profile\Desktop\wt.txt'
+
 
 # xl = r'C:\D\JG\我的坚果云\newstock.xlsx'
 # s = r'C:\D\JG\我的坚果云\wt.txt'
@@ -114,32 +117,105 @@ def addtransaction_g(xls,transactions,page):
     wb.save(xls)
 
 
+def capture(wp,img,trys=3,confidence=0.9):    
+    pic = os.path.join(wp,img+'.png')
+    # print(pic)
+    trytime = 1
+    while trytime < trys:
+        try:
+            button = auto.locateCenterOnScreen(pic,grayscale=True,confidence=confidence)
+            time.sleep(1)
+            break            
+        except TypeError:
+            time.sleep(15)
+            trytime += 1
+            print(f'try to locate {img} {str(trytime)}')
+            continue
+        except OSError as e:
+            print(e)
+            return e
+    else:
+        print(f"Max tries reach, not able to locate option {img}")
+        button = None
+        # return f"Max tries reach, not able to locate option {img}"
+        # raise(f'Find no {img}')
+    return button
+
+
+def click_flow():
+    flow = ['query',
+            'output',
+            'tofile',
+            'browse',
+            'save',
+            'yes']
+    try:
+        os.remove(wt)
+    except:
+        pass
+    for x in flow:
+        findbutton(x)
+        # button = capture(wp,x)
+        # if isinstance(button,tuple):
+        #     auto.click(button)
+        #     # auto.click(button)
+        # else:
+        #     return button
+    time.sleep(2)
+    auto.keyDown('alt')
+    auto.keyDown('f4')
+    auto.keyUp('alt')
+    auto.keyUp('f4')
+
+
+def findbutton(img,**args):
+    button = capture(wp,img,**args)
+    if isinstance(button,tuple):
+        auto.click(button)
+        return True
+    else:
+        return False
+
+
+def savequery():
+    print('统计股票')
+    #沪深
+    if findbutton('transactionY') is False:
+        findbutton('transaction')
+    click_flow()
+    transactions = readtransaction_sh(wt)
+    addtransaction(xls,transactions,'trans')    
+    #港股
+    time.sleep(1)
+    findbutton('hk')     
+    if findbutton('hktranY') is False:
+        findbutton('hktransaction')
+    click_flow()
+    transactions = readtransaction_hk(wt)
+    addtransaction(xls,transactions,'港股')
+    os.startfile(xls)
 
 
 def main():
     parser = argparse.ArgumentParser(description = 'Stock tool')
     group = parser.add_mutually_exclusive_group()
     group.add_argument('-s',action="store_true", help='Shanghai Stock')
-    group.add_argument('-k',action="store_true", help='HongKong Stock')
+    group.add_argument('-h',action="store_true", help='Help')
     group.add_argument('-g',action="store_true", help='Golden')
 
     args = parser.parse_args()
 
-    if args.s:
-        transactions = readtransaction_sh(s)
-        addtransaction(xls,transactions,'trans')
-    elif args.k:
-        transactions = readtransaction_hk(s)
-        addtransaction(xls,transactions,'港股')
+    if args.h:
+        parser.print_help()
     elif args.g:
-        transactions = readtransaction_g(s)
+        transactions = readtransaction_g(wt)
         addtransaction_g(xls,transactions,'gold')        
     else:
-        parser.print_help()
+        savequery()
 
 if __name__ == "__main__":   
     try:
-        main()
+        savequery()
     except PermissionError as e:
         print(e)
         print('Is file being opened?')
