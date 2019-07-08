@@ -205,3 +205,11 @@ a = '''
 
 for x in a.split():
     print(x)
+a = {'ge':'s'}
+# print(hash(a))
+
+from dis import dis
+
+dis(a['ge'])
+
+print(id(a))
