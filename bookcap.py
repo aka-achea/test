@@ -19,16 +19,19 @@ else:
 # print(bp)
 os.chdir(bp)
 
-auto.size()
+# auto.size()
 width, height = auto.size()
 print(width,height)
 auto.PAUSE = 1
-auto.click(150,150,button='left')
+auto.click(150,150,button='left') # for kindle
+
 
 
 def scan(name,p):
     png = name+"_"+p+".png"
-    auto.screenshot(png,region=(125,90, 620, 815))
+    # auto.screenshot(png,region=(125,90, 620, 815))  # for kindle
+    auto.screenshot(png,region=(125,90, 620, 815))  # for bookshelf
+
 
 for p in range(1,int(pages)):
     scan(name,str(p))
