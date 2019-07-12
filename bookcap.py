@@ -8,38 +8,53 @@ SCAN eBOOK on kindle
 import time , os
 import pyautogui as auto
 
-path = 'E:\\SIR\\book'
-name = input('Book Name: ')
-pages = input('Total page: ')
-bp = os.path.join(path,name)
-if os.path.isdir(bp):
-    print('Book folder exist')
-else:
-    os.mkdir(bp)
-# print(bp)
-os.chdir(bp)
-
-# auto.size()
-width, height = auto.size()
-print(width,height)
-auto.PAUSE = 1
-auto.click(150,150,button='left') # for kindle
 
 
-
-def scan(name,p):
-    png = name+"_"+p+".png"
-    # auto.screenshot(png,region=(125,90, 620, 815))  # for kindle
-    auto.screenshot(png,region=(125,90, 620, 815))  # for bookshelf
-
-
-for p in range(1,int(pages)):
-    scan(name,str(p))
+def scan_kindle(name,p):
+    png = name+"_"+str(p)+".png"
+    auto.screenshot(png,region=(125,90, 620, 815))  # for kindle
     time.sleep(1)
     auto.typewrite(['right'])
 
+def scan_bookshelf(name,p): 
+    '''in middle monitor'''
+    png = name+"_"+str(p)+".png"
+    auto.screenshot(png,region=(15,460,1040,1365))  # for bookshelf
+    time.sleep(0.2)
+    auto.keyDown('ctrl')
+    auto.keyDown('pagedown')
+    auto.keyUp('ctrl')
+    auto.keyUp('pagedown')
 
-print('finish book capture')
+ 
+
+if __name__ == "__main__":
+
+    path = r'E:\daka'
+    # name = input('Book Name: ')
+    # pages = input('Total page: ')
+    name = 'TE'
+    pages = '103'
+
+    bp = os.path.join(path,name)
+    if os.path.isdir(bp):
+        print('Book folder exist')
+    else:
+        os.mkdir(bp)
+    os.chdir(bp)
+
+    width, height = auto.size()
+    print(width,height)
+    auto.PAUSE = 1
+    # auto.click(150,150,button='left') # for kindle
+    auto.click(800,800,button='left') # for bookshelf
+
+    for p in range(59,int(pages)):
+        scan_bookshelf(name,p)
+
+    print('finish book capture')
+
+
 
 """
 change log:
