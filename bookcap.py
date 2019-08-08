@@ -33,8 +33,8 @@ if __name__ == "__main__":
         path = r'E:\daka'
         # name = input('Book Name: ')
         # pages = input('Total page: ')
-        name = 'SO2.4lab'
-        pages = '311'
+        name = 'SO'
+        pages = '476'
 
         bp = os.path.join(path,name)
         if os.path.isdir(bp):
@@ -49,7 +49,7 @@ if __name__ == "__main__":
         # auto.click(150,150,button='left') # for kindle
         auto.click(800,800,button='left') # for bookshelf
 
-        for p in range(297,int(pages)+1):
+        for p in range(1,int(pages)+1):
             scan_bookshelf(name,p)
 
         print('finish book capture')
