@@ -49,7 +49,7 @@ if __name__ == "__main__":
         # auto.click(150,150,button='left') # for kindle
         auto.click(800,800,button='left') # for bookshelf
 
-        for p in range(1,int(pages)+1):
+        for p in range(418,int(pages)+1):
             scan_bookshelf(name,p)
 
         print('finish book capture')
