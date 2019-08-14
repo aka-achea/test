@@ -17,21 +17,11 @@ from mylog import mylogger,get_funcname
 from openlink import op_requests,ran_header
 # from mytool import mywait
 
-# headers = {
-#     "Accept":"text/html,application/xhtml+xml,application/xml; " \
-#         "q=0.9,image/webp,*/*;q=0.8",
-#     "Accept-Encoding":"text/html",
-#     "Accept-Language":"en-US,en;q=0.8,zh-CN;q=0.6,zh;q=0.4,zh-TW;q=0.2",
-#     "Content-Type":"application/x-www-form-urlencoded",
-#     "User-Agent":"Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.36 "\
-#         "(KHTML, like Gecko) Chrome/32.0.1700.77 Safari/537.36"
-# }
 
 ignorelist = ['闭馆',\
             '南汇','闵行','嘉定','松江','奉贤','崇明','青浦','金山']
 blacklist = ['徐汇华泾镇','中心馆分拣处',\
-            '浦东洋泾','浦东新区新川沙','浦东沪东新村','杨浦长白新村','杨浦四平',\
-            ]
+            '浦东洋泾','浦东新区新川沙','浦东沪东新村','杨浦长白新村','杨浦四平']
 whitelist = ['普陀分馆','黄浦分馆','静安区图书馆(新闸路)','普陀宜川']
 
 link = set() #link to library list of different pages
@@ -63,26 +53,28 @@ PW = 出版者
 #         return result
 
 
-def modificate(text):
-    ml = mylogger(logfile,get_funcname()) 
-    #file_name = re.sub(r'\s*:\s*', u' - ', file_name)    # for FAT file system
-    text = str(text)
-    before = text
-    text = text.replace('&amp;', u'&')
-    text = text.strip()
-    #file_name = file_name.replace('$', '\\$')    # for command, see issue #7
-    after = text
-    if before != after :
-        ml.debug("Before modify >>>> "+before)
-        ml.debug("After modify >>>> "+after)
-    return text
+# def modificate(text):
+#     ml = mylogger(logfile,get_funcname()) 
+#     #file_name = re.sub(r'\s*:\s*', u' - ', file_name)    # for FAT file system
+#     text = str(text)
+#     before = text
+#     text = text.replace('&amp;', u'&')
+#     text = text.strip()
+#     #file_name = file_name.replace('$', '\\$')    # for command, see issue #7
+#     after = text
+#     if before != after :
+#         ml.debug("Before modify >>>> "+before)
+#         ml.debug("After modify >>>> "+after)
+#     return text
 
-def wantedlib(lib): # remove black list
+def wantedlib(lib): 
+    '''Filter library with ignore/black/white list'''
     #  map(lambda x:re.search(x,lib),ignorelist) :
     for s in ignorelist:
         if re.findall(s,lib):
             return False
     return False if lib in blacklist else True
+
 
 class db():
     def create(self):
@@ -161,25 +153,26 @@ class db():
 
 # @dec  #return version,verlink
 def find_book_ver(queryapi,book,author=''):
+    '''Get book of different version'''
     ml = mylogger(logfile,get_funcname())  
     para = [('menu','search'),
-        ('index','.TW'),
-        ('term',book),
-        ('index','.AW'),
-        ('term',author)]
+            ('index','.TW'),
+            ('term',book),
+            ('index','.AW'),
+            ('term',author)]
     ml.debug(para)    
     try:
         vdict = {} # version dictionary
         html = op_requests(url=queryapi,para=para,header=ran_header())
         ml.debug(html.url)
-        bsObj = BeautifulSoup(html.content,"html.parser")
-        nobook = bsObj.find_all(string=re.compile("对不起"))
-        if nobook: # not find any book
+        bsObj = BeautifulSoup(html.content,"html.parser")        
+        if bsObj.find_all(string=re.compile("对不起")): # not find any book
             ml.error("对不起, 不能找到任何命中书目")
             return None
         else:
             vbook = bsObj.find_all("a",{"class":"mediumBoldAnchor"})
-            if vbook: # mediumBoldAnchor >= 1 , different version find, only scan 1st page
+            if vbook: 
+            # mediumBoldAnchor >= 1 , different version find, only scan 1st page
                 ml.debug('Find book version below')
                 for v in vbook:
                     ml.debug(v)
@@ -188,7 +181,6 @@ def find_book_ver(queryapi,book,author=''):
                     # ml.debug(n)
                     n = n.previous_sibling.text.strip()
                     # ml.debug(n)  # sample n :  "1."
-
                     bookname = str(v).split('<')[1].split('>')[-1].strip()
                     # ml.info(bookname)
                     if bookname == book:
@@ -197,13 +189,13 @@ def find_book_ver(queryapi,book,author=''):
                         vdict[n] = v["href"]
                     else:
                         ml.warning(n+bookname+'--> not match')
-                        if input("Sure ? >>>") in ['y','Y']:
+                        if input("Sure (Y)? >>>") in ['y','Y']:
                             ml.info('Add to search candidate')
                             vdict[n] = v["href"]
                         else:
                             ml.warning('ignored')
                 if vdict == {}: #there is book, but no name match
-                    if input("都不符合，翻页？")  in ['y','Y']:
+                    if input("都不符合，翻页？(Y)")  in ['y','Y']:
                         nextpage = bsObj.find_all(text="下页")[0].parent
                         np = nextpage.attrs['href']
                         print('oooops')
@@ -219,18 +211,20 @@ def find_book_ver(queryapi,book,author=''):
 
 # @dec #return other library link
 def find_other_lib(weblink):
+    '''Get link of other library'''
     ml = mylogger(logfile,get_funcname())      
     ml.debug(weblink)
     global link
     try:
-        #find other library tag  op_requests
+        #find other library tag 
         bsObj = BeautifulSoup(op_requests(weblink,header=ran_header()).content,"html.parser")
         other = bsObj.find("input",{"value":"其它馆址"})
         if other :
             ml.debug(other)
             ol = (str(other).split(" "))
             ml.debug(ol)
-            other_lib = modificate(ol[2][30:-2])
+            # other_lib = modificate(ol[2][30:-2])
+            other_lib = ol[2][30:-2].replace('&amp;', u'&').strip()
             ml.debug(f"Other lib is -->  {other_lib}")
             link.add(other_lib)
             #go to other_lib
@@ -257,6 +251,7 @@ def more_other_lib(bsObj):
 #馆址	馆藏地	索书号	状态	应还日期 馆藏类型 馆藏条码
 # @dec
 def find_library(liblink,book):
+    '''Find libary details'''
     ml = mylogger(logfile,get_funcname())  
     conn = sqlite3.connect(database)
     cursor = conn.cursor()
@@ -302,6 +297,7 @@ def find_library(liblink,book):
 
 # @dec
 def single(book,author=''):
+    '''Search single book'''
     ml = mylogger(logfile,get_funcname())  
     ml.info("搜寻图书："+book)
     if author:

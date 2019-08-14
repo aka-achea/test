@@ -2,40 +2,6 @@
 import os
 from myfs import f_move
 
-# question = r'L:\Music\_Jazz\cc.txt'
-# target = r'L:\Music\mc.txt'
-
-
-# with open(target,'r') as q:
-#     questions = q.readlines()
-#     adict = { x.strip().split('\\')[-1]:x.strip() for x in questions} 
-
-# # print(adict)
-os_dict = {
-    'w':'Windows (WSOE)',
-    'l':'Linux (LSOE)',
-    'v':'VMware (VSOE)',
-    's':'Suse (SSOE)'
-}
-hw_dict = {
-    'r10':'HP DL380 G10',
-    'b10':'HP BL460 G10',
-    'b9':'HP BL460 G9'
-}
-
-a = tuple(hw_dict[x] for x in hw_dict.keys())
-print(a)
-# with open(question,'r') as q:
-#     questions = q.readlines()
-#     for x in questions:
-#         a = x.strip().split('\\')[-1]
-#         if a in adict.keys():
-#             print(x.strip())
-#             print(adict[a])
-#             # print(f_move(x.strip(),adict[a]))
-
-
-
 # for x in os.listdir(target):
 #     av = os.path.basename(x).upper()
 #     if av[-3:] == 'JPG':
@@ -45,8 +11,35 @@ print(a)
 #             print(q)
 
 
+q = r'F:\HD'
+avf = r'i:\av.txt'
 
-# import shutil
+def g_fsize(folderpath): 
+    '''get all file size dict'''
+    adict = {}
+    for root, dirs, files in os.walk(folderpath):
+        for name in files:
+            size = os.path.getsize(os.path.join(root, name))
+            if name[-3:].upper() not in ['JPG','SRT','HTM','PEG','ENT']: 
+                print(name,size)
+                adict[name] = size
+    return adict
+
+# with open(avf,'w',encoding='utf-8') as f:
+#     adict = g_fsize(q)
+#     for a in adict:
+#         f.write(f'{a} {adict[a]} \n')
+
+av = set()
+with open(avf,'r',encoding='utf-8') as f:
+    for a in f.readlines():
+        av.add(a.split()[0][:-4])
+
+b = set()
+for v in os.listdir(r'D:\H\_Mask\1'):
+    b.add(v[:-4])
+
+print(av&b)
 
 # for x in os.listdir(cover):
 #     if x[-3:] == 'JPG':

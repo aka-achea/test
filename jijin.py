@@ -6,27 +6,41 @@
 from PIL import Image
 import pytesseract,math,os ,csv,codecs
 from prettytable import PrettyTable 
+from pathlib import PureWindowsPath as pp
+import time
 
-# ocr = r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe"
-ocr = r'C:\Users\chenj82\AppData\Local\Tesseract-OCR\tesseract.exe'
+
+
+from mystr import splitall
+
+
+'''
+1. iPhone wx screen shot
+2. Picsew
+3. Tesseract
+'''
+
+
+ocr = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 pytesseract.pytesseract.tesseract_cmd =ocr
 
 path = r'E:\UT\JiJin'
-cf = r'E:\UT\JiJin\j.csv'
+cf = r'j.csv'
 threshold = 189
 
 
+
 tdir = os.path.join(path,'t')
-# box = (0,300,655,1230)
-box1 = (0,300,655,530)
-box2 = (0,530,655,760)
-box3 = (0,760,655,990)
-box4 = (0,990,655,1220)
-box = [box1,box2,box3,box4]
+height = 245
+
+# (left, upper, right, lower)
+# The right can also be represented as (left+width)
+# and lower can be represented as (upper+height)
+
 # jump = 230
 #(750, 1334)
 # print(im.size)
-ddict = {}
+jdict = {}
 
 
 def modificate(text):
@@ -47,60 +61,68 @@ def initTable(threshold=150):
             table.append(1)
     return table
 
-def formattable(ddict):
+
+    
+def formattable(jdict):
     t = PrettyTable()
     t.field_names = ['基金','利率','天数']
     t.align['基金'] = 'l'
     t.sortby = '基金'
-    for i in range(len(ddict)):
-        t.add_row(ddict[i+1])
+    for i in range(len(jdict)):
+        t.add_row(jdict[i])
     print(t)
 
+
 def readimg(path,threshold):
-    n = 1
-    for i in os.listdir(path):
-        img = os.path.join(path,i)
-        # print(img)
-        im = Image.open(img).convert('L')   
-        for b in range(4):
-            # out = os.path.join(path,str(b)+'.jpg')
-            # print(out)
-            ni = im.crop(box[b])
-            ni = ni.point(initTable(threshold),'1')
-            # ni.save(out,'jpeg')
-            t = pytesseract.image_to_string(ni,lang='chi_sim')
-            # print(t)
-            dlist = []
-            for i in t.split('\n'):
-                if i != '' and i != ' ':
-                    dlist.append(i)
-            # n = len(dlist)
-            name = modificate(dlist[0].split(' ')[0])
-            rate = dlist[1].replace('+','')[:4]
-            for i in range(2,len(dlist)):
-                if '天' in dlist[i]: 
-                    days = dlist[i][:-1]
+    seplist = ['\n',' ',]
+    n = 0
+    for x in os.listdir(path):
+        if x.split('.')[-1] == 'PNG':          
+            img = os.path.join(path,x)
+            im = Image.open(img).convert('L') 
+            while True:
+                try:    
+                    print('='*40)
+                    box = (0,height*n,800,height*(n+1))
+                    ni = im.crop(box)
+                    ni = ni.point(initTable(threshold),'1')
+                    # out = os.path.join(path,str(b)+'.jpg')
+                    # ni.save(out,'jpeg')
+                    content = pytesseract.image_to_string(ni,lang='chi_sim')
+                    content = splitall(seplist,content)
+                    # print(content)
+                    name = content[0]
+                    for z in range(1,len(content)):
+                        if '.' in content[z]: 
+                            rate = content[z].split('%')[0]
+                            break
+                    for z in range(2,len(content)):
+                        if '天' in content[z]: 
+                            days = content[z].split('天')[0]
+                            break
+                        else:
+                            days = 1
+                    j = [name,rate,days]
+                    print(j) # details
+                    jdict[n] = j
+                    if content == []: break
+                    n += 1
+                except IndexError:
                     break
-                else:
-                    days = 1
-            j = [name,rate,days]
-            # print(j) # details
-            ddict[n] = j
-            n += 1
-    return ddict
+    return jdict
 
 
 # print('threshold '+str(threshold))
-ddict = readimg(path,threshold)
-# formattable(ddict)
+jdict = readimg(path,190)
+formattable(jdict)
 
-with open(cf,'w',newline='',encoding='utf-8-sig') as c:
-    writer = csv.writer(c)
-    for i in range(len(ddict)):
-        writer.writerow(ddict[i+1])
+# with open(cf,'w',newline='',encoding='utf-8-sig') as c:
+#     writer = csv.writer(c)
+#     for i in range(len(jdict)):
+#         writer.writerow(jdict[i+1])
 
 # n = math.floor(/3)
-# ddict = format_data(dlist)
+# jdict = format_data(content)
 
 
     

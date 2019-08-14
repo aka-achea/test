@@ -1,0 +1,64 @@
+{
+    "1":[{
+        "0":[{
+            "name":"pic",
+            "command":"M:|GH|_pri|h|hpic.py",
+            "description":"",
+            "param":""
+        }],
+        "1":[{
+            "name":"",
+            "command":"",
+            "description":"",
+            "param":""            
+        }]
+    }],
+    "2":[{
+        "backup":[{
+            "command":"M:|GH|_pri|backup.bat",
+            "description":"Backup important file",
+            "param":""
+        }]
+
+    }],
+    "3":[{
+        "douban_exh":[{
+            "command":"",
+            "description":"",
+            "param":""
+        }]
+
+    }],
+    "4":[{
+        "douban_exh":[{
+            "command":"M:|GH|_pri|douban_query.py",
+            "description":"query douban exhibition",
+            "param":"exh"
+        }]
+
+    }],
+    "5":[{
+        "douban_exh":[{
+            "command":"",
+            "description":"",
+            "param":""
+        }]
+
+    }],
+    "6":[{
+        "douban_exh":[{
+            "command":"",
+            "description":"",
+            "param":""
+        }]
+
+    }],
+    "7":[{
+        "douban_exh":[{
+            "command":"",
+            "description":"",
+            "param":""
+        }]
+
+    }]
+}
