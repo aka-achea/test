@@ -2,13 +2,13 @@
 import os
 from myfs import f_move
 
-# for x in os.listdir(target):
-#     av = os.path.basename(x).upper()
-#     if av[-3:] == 'JPG':
-#         # print(av[:-4])
-#         q = os.path.join(hd,av)
-#         if os.path.exists(q):
-#             print(q)
+for x in os.listdir(target):
+    av = os.path.basename(x).upper()
+    if av[-3:] == 'JPG':
+        # print(av[:-4])
+        q = os.path.join(hd,av)
+        if os.path.exists(q):
+            print(q)
 
 
 q = r'F:\HD'
@@ -63,3 +63,14 @@ from dis import dis
 
 
 print(__file__)
+
+
+
+
+
+
+
+
+
+
+
