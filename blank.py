@@ -62,7 +62,6 @@ from dis import dis
 # print(id(a))
 
 
-print(__file__)
 
 
 
