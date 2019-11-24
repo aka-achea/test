@@ -30,8 +30,8 @@ def rename_pic(path):
         if re.findall(' \(2\)',pic):
             print(pic)
             src = os.path.join(path,pic)
-            dst = os.path.join(path,pic.replace('(2)', ''))
+            dst = os.path.join(path,pic.replace('_副本', ''))
             f_move(src,dst)
 
 
-rename_pic(r'N:\LifeTrack\temp\巴尔干 - classic')
+rename_pic(r'N:\新建文件夹\新西兰 - classic')

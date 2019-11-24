@@ -2,6 +2,7 @@
 #coding:utf-8
 #tested in win
 
+__version__ = 20191124
 
 from urllib.error import URLError
 # from urllib.parse import quote
@@ -53,19 +54,6 @@ PW = 出版者
 #         return result
 
 
-# def modificate(text):
-#     ml = mylogger(logfile,get_funcname()) 
-#     #file_name = re.sub(r'\s*:\s*', u' - ', file_name)    # for FAT file system
-#     text = str(text)
-#     before = text
-#     text = text.replace('&amp;', u'&')
-#     text = text.strip()
-#     #file_name = file_name.replace('$', '\\$')    # for command, see issue #7
-#     after = text
-#     if before != after :
-#         ml.debug("Before modify >>>> "+before)
-#         ml.debug("After modify >>>> "+after)
-#     return text
 
 def wantedlib(lib): 
     '''Filter library with ignore/black/white list'''
@@ -151,15 +139,16 @@ class db():
         cursor.close()
         conn.close()
 
-# @dec  #return version,verlink
+
 def find_book_ver(queryapi,book,author=''):
-    '''Get book of different version'''
+    '''Get book of different version,
+    return version,verlink 
+    '''
     ml = mylogger(logfile,get_funcname())  
     para = [('menu','search'),
-            ('index','.TW'),
-            ('term',book),
-            ('index','.AW'),
-            ('term',author)]
+            ('index','.TW'),('term',book)]
+    if author:
+        para += [('index','.AW'),('term',author)]            
     ml.debug(para)    
     try:
         vdict = {} # version dictionary
@@ -169,10 +158,9 @@ def find_book_ver(queryapi,book,author=''):
         if bsObj.find_all(string=re.compile("对不起")): # not find any book
             ml.error("对不起, 不能找到任何命中书目")
             return None
-        else:
-            vbook = bsObj.find_all("a",{"class":"mediumBoldAnchor"})
-            if vbook: 
-            # mediumBoldAnchor >= 1 , different version find, only scan 1st page
+        else: 
+            if vbook := bsObj.find_all("a",{"class":"mediumBoldAnchor"}):
+                # mediumBoldAnchor >= 1 , different version find, only scan 1st page
                 ml.debug('Find book version below')
                 for v in vbook:
                     ml.debug(v)
@@ -189,7 +177,7 @@ def find_book_ver(queryapi,book,author=''):
                         vdict[n] = v["href"]
                     else:
                         ml.warning(n+bookname+'--> not match')
-                        if input("Sure (Y)? >>>") in ['y','Y']:
+                        if input("Go ahead (Y/y)? Press Enter to ignore >>>") in ['y','Y']:
                             ml.info('Add to search candidate')
                             vdict[n] = v["href"]
                         else:
@@ -198,7 +186,7 @@ def find_book_ver(queryapi,book,author=''):
                     if input("都不符合，翻页？(Y)")  in ['y','Y']:
                         nextpage = bsObj.find_all(text="下页")[0].parent
                         np = nextpage.attrs['href']
-                        print('oooops')
+                        print('oooops do nothing')
                     else:
                         return None  # all none
             else: # mediumBoldAnchor = 0 , search directly
@@ -209,17 +197,17 @@ def find_book_ver(queryapi,book,author=''):
     ml.debug(vdict)
     return vdict
 
-# @dec #return other library link
+
 def find_other_lib(weblink):
-    '''Get link of other library'''
+    '''Get link of other library
+    return other library link
+    '''
     ml = mylogger(logfile,get_funcname())      
     ml.debug(weblink)
-    global link
-    try:
-        #find other library tag 
-        bsObj = BeautifulSoup(op_requests(weblink,header=ran_header()).content,"html.parser")
-        other = bsObj.find("input",{"value":"其它馆址"})
-        if other :
+    global link 
+    try:        #find other library tag 
+        bsObj = BeautifulSoup(op_requests(weblink,ran_header()).content,"html.parser")
+        if other := bsObj.find("input",{"value":"其它馆址"}):
             ml.debug(other)
             ol = (str(other).split(" "))
             ml.debug(ol)
@@ -228,35 +216,28 @@ def find_other_lib(weblink):
             ml.debug(f"Other lib is -->  {other_lib}")
             link.add(other_lib)
             #go to other_lib
-            bsObj = BeautifulSoup(op_requests(other_lib,header=ran_header()).content,"html.parser")
+            bsObj = BeautifulSoup(op_requests(other_lib,ran_header()).content,"html.parser")
             more_other_lib(bsObj)
-            # except IndexError as e:
-            #     ml.error(e)
         else:
             more_other_lib(bsObj)
             link.add(weblink)
-
     except AttributeError as e:
         print(e)
     ml.debug(f"Other lib list --> {link}")
 
 
 def more_other_lib(bsObj):  
+    """"""
     global link
-    lk = bsObj.find_all(href=re.compile("staffonly=$"))
-    if lk:
+    if lk := bsObj.find_all(href=re.compile("staffonly=$")):
         for i in lk : link.add(i["href"]) 
 
 
-#馆址	馆藏地	索书号	状态	应还日期 馆藏类型 馆藏条码
-# @dec
-def find_library(liblink,book):
-    '''Find libary details'''
+def find_library(cursor,liblink,book):
+    '''Find libary details\n
+    馆址 馆藏地	索书号 状态	应还日期 馆藏类型 馆藏条码'''
     ml = mylogger(logfile,get_funcname())  
-    conn = sqlite3.connect(database)
-    cursor = conn.cursor()
-
-    bsObj = BeautifulSoup(op_requests(liblink,header=ran_header()).content,"html.parser")
+    bsObj = BeautifulSoup(op_requests(liblink,ran_header()).content,"html.parser")
     for i in bsObj.find_all("tr",{"height":"15"}):
         ml.debug('='*10)
         library = i.td
@@ -291,28 +272,28 @@ def find_library(liblink,book):
         else:
             ml.debug('Not recommaned library')
 
-    cursor.close()
-    conn.commit()
-    conn.close()
 
-# @dec
 def single(book,author=''):
     '''Search single book'''
     ml = mylogger(logfile,get_funcname())  
     ml.info("搜寻图书："+book)
     if author:
-        ml.info("作者："+author)
-    vdict = find_book_ver(queryapi,book,author)
-    if vdict:
+        ml.info("作者："+author) 
+    if vdict := find_book_ver(queryapi,book,author):
         ml.info("Scan version")
         for v in vdict:
             ml.info(v + book)
             find_other_lib(vdict[v])
         ml.debug("all link find below")
+        conn = sqlite3.connect(database)
+        cursor = conn.cursor()
         for liblink in link:
             ml.debug(liblink)
-            find_library(liblink,book)
-    
+            find_library(cursor,liblink,book)
+        cursor.close()
+        conn.commit()
+        conn.close()
+
 
 def main():
     ml = mylogger(logfile,get_funcname())  
@@ -325,8 +306,7 @@ def main():
     parser.add_argument('-a','--author',help='Search author')
     args = parser.parse_args()
 
-    if args.book:
-        book = args.book
+    if book := args.book:
         single(book,args.author if args.author else '')
       
     elif args.multiple:
@@ -335,6 +315,7 @@ def main():
             for i in w:
                 book = i.strip()
                 single(book)
+        ml.info('Search complete')
     
     elif args.clean:
         ml.info('Clean up database')
@@ -363,7 +344,6 @@ def main():
         ml.info(v.get_string(fields = ['图书','索书号']))
 
     elif args.q == 'b':
-        # print('best')
         r = db()
         v = r.sum()
         ml.info(v.get_string(fields = ['图书馆','本']))
@@ -384,6 +364,7 @@ if __name__=='__main__':
 
 """
 Changelog:
+2019.11.24 optimize code with python3.8 v2.8
 2019.3.28 fix other lib bug v2.7
 2019.3.13 add filter lib function v2.6
 2019.3.11 Add author search key v2.5

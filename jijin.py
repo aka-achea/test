@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #coding:utf-8
-#version:20190825
+#version:20190922
 
 
 
@@ -29,7 +29,7 @@ pytesseract.pytesseract.tesseract_cmd =ocr
 path = r'M:\MyProject\JiJin'
 threshold = 189
 xls = r'M:\MyProject\JiJin\t.xlsx'
-
+# xls = r'N:\Doc\财务统计.xlsx'
 
 # (left, upper, right, lower)
 # The right can also be represented as (left+width)
@@ -57,21 +57,21 @@ def initTable(threshold=150):
     
 def formattable_jj(jdict):
     t = PrettyTable()
-    t.field_names = ['基金','利率','天数']
+    t.field_names = ['基金','利率','天数','Status']
     t.align['基金'] = 'l'
     t.sortby = '基金'
     for k in jdict.keys():
-        t.add_row([k,jdict[k][0],jdict[k][1]])
+        t.add_row([k,jdict[k][0],jdict[k][1],jdict[k][2]])
     print(t)
 
 
 def formattable_mm(mdict):
     m = PrettyTable()
-    m.field_names = ['基金','数量']
+    m.field_names = ['基金','数量','Status']
     m.align['基金'] = 'l'
     m.sortby = '基金'
     for k in mdict.keys():
-        m.add_row([k,mdict[k]])
+        m.add_row([k,mdict[k][0],mdict[k][1]])
     print(m)
 
 
@@ -103,7 +103,7 @@ def readjj(path,threshold,height=245):
                     days = 1
             # print('='*40)
             # print(j) # details
-            jdict[name] = [rate,days]
+            jdict[name] = [rate,days,' ']
             if content == []: break
             n += 1
         except IndexError:
@@ -132,7 +132,7 @@ def readsaving(path,threshold,height=270):
                     amount = content[z]
                     break   
             # print('='*40)
-            jdict[name] = amount
+            jdict[name] = [amount,' ']
             if content == []: break
             n += 1
         except IndexError:
@@ -143,12 +143,8 @@ def readsaving(path,threshold,height=270):
 def main():
     # Update finance product
     jdict = readjj(path,190)
-    formattable_jj(jdict)
-    # pprint(jdict)
     # # Update money repository
     mdict = readsaving(path,190)
-    # pprint(mdict)
-    formattable_mm(mdict)
 
     wb = openpyxl.load_workbook(xls)
     sheet = wb['理财明细']
@@ -159,16 +155,18 @@ def main():
         # print(fundname)
         try:
             sheet.cell(row=r,column=4).value = float(jdict[fundname][0])
-            # print(jdict[fundname])
+            jdict[fundname][2] = 'match'
+            sheet.cell(row=r,column=6).value = float(mdict[fundname][0])
+            mdict[fundname][1] = 'match'
         except KeyError:
             pass
-        try:    
-            sheet.cell(row=r,column=6).value = float(mdict[fundname])
-            # print(mdict[fundname])
-        except KeyError:
-            pass
-    wb.save(xls)
+    # pprint(jdict)
+    # pprint(mdict)
+    formattable_jj(jdict)
+    formattable_mm(mdict)
 
+    wb.save(xls)
+    os.startfile(xls)
 
 if __name__ == "__main__":
     main()
