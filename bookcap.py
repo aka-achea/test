@@ -16,8 +16,9 @@ def scan_kindle(name,p):
     time.sleep(1)
     auto.typewrite(['right'])
 
+
 def scan_bookshelf(name,p): 
-    '''in middle monitor'''
+    '''focus need to be in middle monitor'''
     png = name+"_"+str(p)+".png"
     auto.screenshot(png,region=(15,460,1040,1360))  # for bookshelf
     # time.sleep(0.2)
@@ -33,13 +34,11 @@ if __name__ == "__main__":
         path = r'E:\daka'
         # name = input('Book Name: ')
         # pages = input('Total page: ')
-        name = 'SO'
-        pages = '476'
+        name = 'DO'
+        pages = '541'
 
         bp = os.path.join(path,name)
-        if os.path.isdir(bp):
-            print('Book folder exist')
-        else:
+        if os.path.isdir(bp) is False:
             os.mkdir(bp)
         os.chdir(bp)
 
@@ -49,11 +48,9 @@ if __name__ == "__main__":
         # auto.click(150,150,button='left') # for kindle
         auto.click(800,800,button='left') # for bookshelf
 
-        for p in range(418,int(pages)+1):
+        for p in range(1,int(pages)+1):
             scan_bookshelf(name,p)
-
         print('finish book capture')
-
     except KeyboardInterrupt:
         print("Stop")
 
