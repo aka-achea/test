@@ -33,4 +33,6 @@ import os,sys
 
 #coding:utf-8
 
-
+from pprint import pprint
+a= {"songid":127433973,"songmid":"002IvRV43ybv7F","songtype":0,"songname":"孤独的角落","songtitle":"孤独的角落 (TV Version)","songsubtitle":"","type":0,"cdIdx":0,"interval":105,"isonly":0,"language":0,"genre":0,"singer":[{"id":2283050,"mid":"004CnOhH2F3zqD","name":"韦正","title":"韦正","type":0,"uin":0}],"albumid":0,"albummid":"","albumname":"","strMediaMid":"0007GX6X4bFwNT","sizeape":0,"preview":{"trybegin":0,"tryend":0,"trysize":0},"pay":{"payalbumprice":0,"payplay":0,"timefree":0},"msgid":0,"switch":81683,"alertid":11,"action":{"play_lq":1,"play_hq":0,"play_sq":0,"down_lq":1,"down_hq":0,"down_sq":0,"soso":0,"fav":1,"share":1,"bgm":1,"ring":1,"sing":1,"radio":1,"try":0,"give":0,"play":1},"tryPlay":0,"anyPlay":1,"tryIcon":0,"disabled":0,"sosoFlag":0,"formatted":1,"mtype":"qqmusic","songurl":"","mid":"127433973","singername":"韦正","singerid":2283050,"singermid":"004CnOhH2F3zqD","fav":""}
+pprint(a)
