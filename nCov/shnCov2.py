@@ -20,8 +20,7 @@ from pyecharts.globals import ChartType,SymbolType
 
 
 from crawler import get_detail
-from conf import data,ak_web,geofile,outfile,ak_dev
-
+from conf import ak_web,geofile,outfile,ak_dev,shsumary
 
 
 def data_process(data):
@@ -39,7 +38,7 @@ def data_process(data):
     return day,shsum,shpending,shcured,shdeath,shsum_date,new_date,newconfirmed,newpending
 
 
-def bmap_base(geofile=geofile,BAIDU_AK=ak_web) -> BMap:
+def bmap_base(BAIDU_AK,geofile=geofile) -> BMap:
     with open(geofile,'r',encoding='utf-8') as f:
         j = json.loads(f.read())
     location = [[k,1] for k in j.keys()]
@@ -48,12 +47,38 @@ def bmap_base(geofile=geofile,BAIDU_AK=ak_web) -> BMap:
         .add_schema(
             baidu_ak=BAIDU_AK,
             center=[121.497739,31.242029],
-            zoom=11
+            zoom=11,
+            map_style={
+                "styleJson":[
+                    {
+                        "featureType": "manmade",
+                        "elementType": "all",
+                        "stylers": {"visibility": "off"},
+                    },
+                    {
+                        "featureType": "highway",
+                        "elementType": "labels",
+                        "stylers": {"visibility": "off"},
+                    },
+                    # {
+                    #     "featureType": "label",
+                    #     "elementType": "all",
+                    #     "stylers": {"visibility": "off"},
+                    # },
+                    {
+                        "featureType": "building",
+                        "elementType": "all",
+                        "stylers": {"visibility": "off"},
+                    },
+   
+                ]
+            }
         )
         .add_coordinate_json(json_file=geofile)
         .add(
             '',location,
             # type_='heatmap',
+            symbol_size=9,
             label_opts=LabelOpts(is_show=False)
         )
         .set_global_opts(title_opts=TitleOpts())
@@ -74,14 +99,14 @@ def new_trend(day,newconfirmed,newpending) -> Line:
             linestyle_opts=LineStyleOpts(width=2,color='red'),
             is_connect_nones=True,is_smooth=True,
             )
-        .add_yaxis(
-            '新疑似',newpending,symbol_size=1,
-            # symbol='triangle',color='blue',
-            itemstyle_opts=ItemStyleOpts(color='blue'),
-            label_opts=LabelOpts(font_size=15,color='darkblue',position='inside'),
-            linestyle_opts=LineStyleOpts(width=2,color='blue'),
-            is_connect_nones=True,is_smooth=True,
-            )
+        # .add_yaxis(
+        #     '新疑似',newpending,symbol_size=1,
+        #     # symbol='triangle',color='blue',
+        #     itemstyle_opts=ItemStyleOpts(color='blue'),
+        #     label_opts=LabelOpts(font_size=15,color='darkblue',position='inside'),
+        #     linestyle_opts=LineStyleOpts(width=2,color='blue'),
+        #     is_connect_nones=True,is_smooth=True,
+        #     )
         .set_global_opts(
             xaxis_opts=AxisOpts(
                 # type_="category",
@@ -123,7 +148,7 @@ def total_trend(day,shdeath,shcured,shsum,shpending) -> Line:
             itemstyle_opts=ItemStyleOpts(color='LimeGreen'),
             label_opts=LabelOpts(font_size=15,color='ForestGreen'),
             areastyle_opts=AreaStyleOpts(opacity=0.5,color='LimeGreen'),
-            stack=1,is_connect_nones=True,is_smooth=True
+            is_connect_nones=True,is_smooth=True
             )
         .add_yaxis(
             '确诊',shsum,symbol_size=10,color='Orange',
@@ -220,7 +245,7 @@ def map_visualmap(sumary) -> Map:
     return c
 
 
-def makechart(data):
+def makechart(data,debug=False):
     day,shsum,shpending,shcured,shdeath,shsum_date,new_date,newconfirmed,newpending = data_process(data)
     title = "上海新型冠状病毒统计"
     grid_chart = Grid()
@@ -232,14 +257,21 @@ def makechart(data):
         new_trend(day,newconfirmed,newpending),
         grid_opts=GridOpts(pos_top="75%",)
     )       
-    sumary = get_detail()
+    if debug:
+        ak = ak_dev
+    else:
+        ak = ak_web
+        get_detail()
+    with open(shsumary,'r',encoding='utf-8') as f:
+        j = json.loads(f.read())
+    sumary = [ (k,j[k]) for k in j.keys() ]    
     tab = Tab(page_title=title)
     tab.add(grid_chart, "趋势")
-    tab.add(map_visualmap(sumary), "分布")
-    tab.add(bmap_base(),'详细地图')
+    tab.add(map_visualmap(sumary), "区县分布")
+    tab.add(bmap_base(BAIDU_AK=ak),'详细地图')
     tab.render(outfile) 
 
 
 if __name__ == "__main__":
     # from conf import sumarysample
-    makechart(data)
+    makechart(data,debug=True)

@@ -11,6 +11,7 @@ from pprint import pprint
 
 # customized module
 from openlink import op_requests,ran_header,op_simple
+from conf import shsumary
 
 api = 'https://weixin.sogou.com/weixin?query=%E5%81%A5%E5%BA%B7%E4%B8%8A%E6%B5%B712320'
 web = 'https://weixin.sougou.com'
@@ -23,18 +24,25 @@ from selenium.webdriver.chrome.options import Options
 def get_detail():
     dxyapi = 'https://lab.isaaclin.cn/nCoV/api/area?latest=1&province=%E4%B8%8A%E6%B5%B7%E5%B8%82'
     header = ran_header()
-    html = requests.get(dxyapi)
-    # print(html.text)
-    # bsobj = BeautifulSoup(html,'html.parser').text
-    j = json.loads(html.text)
+    try:
+        html = requests.get(dxyapi)
+        # bsobj = BeautifulSoup(html,'html.parser').text
+        j = json.loads(html.text)
+    except json.decoder.JSONDecodeError:     
+        print(html.text)
+        print('Fail to update data')
+        return False
     data = j['results'][0]
     confirmedCount = data['confirmedCount']
     curedCount = data['curedCount']
     deadCount = data['deadCount']
     detail = data['cities']
-    detail = [ (d['cityName'],d['confirmedCount']) for d in detail ]
+    detail = { d['cityName']:d['confirmedCount'] for d in detail }
     pprint(detail)
-    return detail
+    with open(shsumary,'w',encoding='utf-8') as f:
+        json.dump(detail,f,ensure_ascii=False,indent=2)
+    return True
+
 
 web = 'http://wsjkw.sh.gov.cn/xwfb/index.html'
 
@@ -81,10 +89,8 @@ def op_sel(web):
 # print(op_sel(web))
 # print(get_detail())
 
-wx = 'https://mp.weixin.qq.com/s/lMQ9NzbjbfUYV8BbuBdp9Q'
 
-
-def crawl_wx(wx):
+def crawl_wx_number(wx):
     html = requests.get(wx).text
     # print(html.text)
     obj = BeautifulSoup(html,'html.parser')
@@ -105,3 +111,42 @@ def crawl_wx(wx):
         raise   
     return int(sumtotal),int(pending)
 
+
+def crawl_wx_location(wx):
+    plist = []
+    html = requests.get(wx).text
+    # print(html.text)
+    obj = BeautifulSoup(html,'html.parser')
+    c = obj.find('section',{'data-tools':'135编辑器'})
+    for p in c.find_all('p') :
+        # pprint(p)
+        # print('='*10)
+        if p.strong:
+            # pprint(p)
+            # print('='*7)
+            q = p.children
+            q = [ y for y in q ]
+            # print(q)
+            if len(q) == 1 :                
+                # pprint(p.text)
+                tmp = p.text.split('：')
+                district = tmp[0]
+                place = tmp[1]
+            else:
+                # q = [ y for y in q ]
+                # pprint(q)
+                district = q[0].text.replace('：','')
+                place = q[-1].text
+            if '、' in place:
+                for x in place.split('、'):
+                    plist.append(district + x)
+            else:
+                plist.append(district + place)
+    return plist
+
+
+if __name__ == "__main__":
+    
+    wx = 'https://mp.weixin.qq.com/s/EpurrMKVG5yHUDmXRDukNQ'
+
+    pprint(crawl_wx_location(wx))

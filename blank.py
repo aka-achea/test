@@ -1,51 +1,49 @@
-def graph_with_edge_opts() -> Graph:
-    nodes_data = [
-        opts.GraphNode(name="结点1", symbol_size=10),
-        opts.GraphNode(name="结点2", symbol_size=20),
-        opts.GraphNode(name="结点3", symbol_size=30),
-        opts.GraphNode(name="结点4", symbol_size=40),
-        opts.GraphNode(name="结点5", symbol_size=50),
-        opts.GraphNode(name="结点6", symbol_size=60),
-    ]
-    links_data = [
-        opts.GraphLink(source="结点1", target="结点2", value=2),
-        opts.GraphLink(source="结点2", target="结点3", value=3),
-        opts.GraphLink(source="结点3", target="结点4", value=4),
-        opts.GraphLink(source="结点4", target="结点5", value=5),
-        opts.GraphLink(source="结点5", target="结点6", value=6),
-        opts.GraphLink(source="结点6", target="结点1", value=7),
-    ]
-    c = (
-        Graph(init_opts=InitOpts(animation_opts = opts.AnimationOpts(animation=False)))
-        .add(
-            "",
-            nodes_data,
-            links_data,
-            repulsion=4000,
-            edge_label=opts.LabelOpts(
-                is_show=True,
-                position="middle",
-                formatter=" {c}",
-            ),
-            # linestyle_opts=opts.LineStyleOpts(
-            #     curve=1,
-            #     type_='dotted'
-            # ),
-            edge_symbol=['none','arrow'],
-            symbol='circle'
-        )
-        .set_global_opts(
-            title_opts=TitleOpts(title="Graph"),
-            legend_opts=opts.LegendOpts(),
-            visualmap_opts=opts.VisualMapOpts(),
-            tooltip_opts=TooltipOpts(),
-            toolbox_opts=opts.ToolboxOpts(
-                is_show=True,
-                feature=opts.ToolBoxFeatureOpts()
-            )
-        )
-    )
-    return c
 
-# graph_with_edge_opts().render()
 
+# import json
+from myfs import g_fsize,jdump,jload
+from itertools import product
+from pprint import pprint
+
+a = [
+[r'O:',r'd:\avnomask.txt'],
+[r'H:',r'd:\av1.txt'],
+[r'I:',r'd:\av2.txt'],
+[r'K:',r'd:\av3.txt'],
+[r'D:\H',r'd:\maskd.txt'],
+[r'E:\AV',r'd:\ave.txt'],
+[r'J:\decode',r'd:\avj.txt'],
+[r'F:',r'd:\avhd.txt']
+]
+
+def create_dump():
+    for x in a:
+        data = g_fsize(x[0])
+        jdump(x[1],data)
+
+# create_dump()
+
+def compare_dump():
+    p = []
+    for x in a:
+        keys = jload(x[1]).keys()
+        kk = [ k[:-4] for k in keys if k[-3:] not in ['JPG','INI','PEG'] ]
+        p.append({x[0]:kk})
+    dk = ( (x,y) for x in p for y in p if x != y )
+    for x in dk:
+        # if x[0] != x[1]:
+        m = [ s for s in x[0].values() ][0]
+        n = [ s for s in x[1].values() ][0]
+        mk = [ s for s in x[0].keys() ][0]
+        nk = [ s for s in x[1].keys() ][0]
+        if dup := set(m) & set(n):
+            print(f'{mk} & {nk} : {dup}' )
+
+def murge_dump():
+    m = {}
+    for x in a:
+        m.update(jload(x[1]))
+    jdump(r'd:\all.txt',m)
+
+
+murge_dump()

@@ -9,7 +9,7 @@ import sys
 from configparser import ConfigParser
 from pprint import pprint
 
-from conf import qconf,bucket,target,dest
+from conf import qconf,bucket,outfile,dest
 
 # logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 
@@ -73,5 +73,5 @@ def download_cos(bucket,objfolder):
 
 
 if __name__ == "__main__":   
-    result = upload_to_cos(target,bucket,dest)
+    result = upload_to_cos(outfile,bucket,dest)
     print(result)
