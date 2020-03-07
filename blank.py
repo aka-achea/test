@@ -46,4 +46,13 @@ def murge_dump():
     jdump(r'd:\all.txt',m)
 
 
-murge_dump()
+# murge_dump()
+
+
+from urllib import parse
+
+s = 'ed2k://|file|%E7%8B%99%E5%87%BB%E7%B2%BE%E8%8B%B1%EF%BC%9A%E5%B7%85%E5%B3%B0%E5%AF%B9%E5%86%B3.720p.BD%E4%B8%AD%E8%8B%B1%E5%8F%8C%E5%AD%97[%E6%9C%80%E6%96%B0%E7%94%B5%E5%BD%B1www.6vhao.tv].mp4|1474483384|3A62C00F7790D779AC879C7F6A3FB86B|h=N2D6HC2QWPNGCAAVHFGTV3J4RBCZQKCB|/'
+
+t = parse.unquote(s)
+
+print(t)
