@@ -172,8 +172,8 @@ def total_trend(day,shdeath,shcured,shsum,shpending) -> Line:
                 ),
             # tooltip_opts=TooltipOpts(formatter="{b} {a}\n {c}人"),
             datazoom_opts=[
-                DataZoomOpts(range_start=40,range_end=100,xaxis_index=[0, 1],),
-                DataZoomOpts(range_start=40,range_end=100,xaxis_index=[0, 1],type_='inside'),
+                DataZoomOpts(range_start=60,range_end=100,xaxis_index=[0, 1],),
+                DataZoomOpts(range_start=60,range_end=100,xaxis_index=[0, 1],type_='inside'),
                 ],
             xaxis_opts=AxisOpts(name_gap=50),
             legend_opts=LegendOpts(

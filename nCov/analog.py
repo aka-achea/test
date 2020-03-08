@@ -9,7 +9,7 @@ import datetime
 from cos import download_cos
 from conf import logdir,logbucket
 
-myip = ['101.80.91.59','101.87.14.107','101.87.13.250','101.87.14.204','101.80.89.20']
+myip = ['101.80.91.59','101.87.14.107','101.87.13.250','101.87.14.204','101.80.89.20','101.87.12.7']
 iplist = []
 timelist = []
 
