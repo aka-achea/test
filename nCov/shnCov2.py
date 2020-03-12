@@ -20,7 +20,8 @@ from pyecharts.globals import ChartType,SymbolType
 
 
 from crawler import get_detail
-from conf import ak_web,geofile,outfile,ak_dev,shsumary
+from conf import bkey,geofile,outfile,shsumary
+
 
 
 def data_process(data):
@@ -256,11 +257,12 @@ def makechart(data,debug=False):
     grid_chart.add(
         new_trend(day,newconfirmed,newpending),
         grid_opts=GridOpts(pos_top="75%",)
-    )       
+    ) 
+    bk = bkey()      
     if debug:
-        ak = ak_dev
+        ak = bk.ak_dev
     else:
-        ak = ak_web
+        ak = bk.ak_web
         get_detail()
     with open(shsumary,'r',encoding='utf-8') as f:
         j = json.loads(f.read())

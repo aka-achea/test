@@ -7,21 +7,22 @@ import requests
 import json
 from pprint import pprint
 
-from conf import ak_geo,sk_geo,geofile
+from conf import bkey,geofile
 from crawler import crawl_wx_location
 
 
 
 def get_urt(address):
     '''Build API request'''
+    bk = bkey()
     # 以get请求为例http://api.map.baidu.com/geocoder/v2/?address=百度大厦&output=json&ak=你的ak
-    queryStr = f'/geocoder?address={address}&output=json&ak={ak_geo}' 
+    queryStr = f'/geocoder?address={address}&output=json&ak={bk.ak_geo}' 
  
     # 对queryStr进行转码，safe内的保留字符不转换
     encodedStr = parse.quote(queryStr, safe="/:=&?#+!$,;'@()*[]")
  
     # 在最后直接追加上yoursk
-    rawStr = encodedStr + sk_geo
+    rawStr = encodedStr + bk.sk_geo
  
     #计算sn
     sn = (hashlib.md5(parse.quote_plus(rawStr).encode("utf8")).hexdigest())
