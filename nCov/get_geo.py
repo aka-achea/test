@@ -69,6 +69,6 @@ def update_geo(wx):
 
 if __name__ == "__main__":
 
-    wx = 'https://mp.weixin.qq.com/s/Yf5f_f7EldzjCZwuJRJNrw'
+    wx = 'https://mp.weixin.qq.com/s/Mzha38bv_snZwVA7Gbwy_g'
 
     update_geo(wx)
