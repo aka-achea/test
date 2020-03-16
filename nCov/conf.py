@@ -28,7 +28,7 @@ if not os.path.exists(workpath):
     workpath = r'C:\Business\GitHub\nCov'
 qconf = os.path.join(workpath,'qcloud.ini')
 outfile = os.path.join(workpath,dest)
-logdir = os.path.join(workpath,'log')
+logdir = os.path.join(workpath,'log','03')
 geofile = os.path.join(workpath,'geo.json')
 shsumary = os.path.join(workpath,'shsumary.txt')
 
