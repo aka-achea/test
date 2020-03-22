@@ -30,9 +30,8 @@ def murge_txt(txtlist:list):
     return output
 
 
-def main(client,murge=True,pic=None):
-
-
+def main(murge=True,pic=None):
+    client = init_client()
     if pic:
         img = get_file_content(pic)
     else:
@@ -44,6 +43,7 @@ def main(client,murge=True,pic=None):
         txtlist = murge_txt(txtlist)
     for x in txtlist:
         print(x)
+
 
 if __name__ == "__main__":
     main(murge=True)

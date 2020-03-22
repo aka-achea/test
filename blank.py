@@ -64,3 +64,9 @@ def tag(name):
 
 with tag("h1"):
     print("This is Title.")
+
+
+def a():
+    print(a.__module__)
+
+a()

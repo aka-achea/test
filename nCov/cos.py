@@ -55,6 +55,7 @@ def download_cos(bucket,objfolder):
             Bucket=bucket,
             Prefix=objfolder
         )
+        print(response)
         filelist = response['Contents']
         filelist = [ f['Key'] for f in filelist ]
         # pprint(filelist)
