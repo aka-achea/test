@@ -66,7 +66,24 @@ with tag("h1"):
     print("This is Title.")
 
 
-def a():
-    print(a.__module__)
+import time  
+import concurrent.futures
+from tqdm import tqdm
 
-a()
+def f(x):
+    time.sleep(0.001)  # to visualize the progress
+    return x**2
+
+def run(f, my_iter):
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        todo = [ executor.submit(f,x) for x in my_iter]
+        done = concurrent.futures.as_completed(todo)
+        list(tqdm(done,total=len(my_iter)))
+        # results = list(tqdm(executor.map(f, my_iter), total=len(my_iter)))
+    # return results
+
+my_iter = range(10000)
+# run(f, my_iter)
+
+for i in tqdm(range(10000000),bar_format= '{n_fmt}/{total_fmt}{l_bar}{bar}'):
+    pass
