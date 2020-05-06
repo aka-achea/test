@@ -5,85 +5,126 @@ from myfs import g_fsize,jdump,jload
 from itertools import product
 from pprint import pprint
 
-a = [
-[r'O:',r'd:\avnomask.txt'],
-[r'H:',r'd:\av1.txt'],
-[r'I:',r'd:\av2.txt'],
-[r'K:',r'd:\av3.txt'],
-[r'D:\H',r'd:\maskd.txt'],
-[r'E:\AV',r'd:\ave.txt'],
-[r'J:\decode',r'd:\avj.txt'],
-[r'F:',r'd:\avhd.txt']
-]
 
-def create_dump():
-    for x in a:
-        data = g_fsize(x[0])
-        jdump(x[1],data)
+# def unquote_url(url):
+#     from urllib import parse
+#     return parse.unquote(url)
 
-# create_dump()
+# from bs4 import BeautifulSoup
+# from hyper import HTTPConnection
+# from urllib.parse import urlparse,parse_qs
 
-def compare_dump():
-    p = []
-    for x in a:
-        keys = jload(x[1]).keys()
-        kk = [ k[:-4] for k in keys if k[-3:] not in ['JPG','INI','PEG'] ]
-        p.append({x[0]:kk})
-    dk = ( (x,y) for x in p for y in p if x != y )
-    for x in dk:
-        # if x[0] != x[1]:
-        m = [ s for s in x[0].values() ][0]
-        n = [ s for s in x[1].values() ][0]
-        mk = [ s for s in x[0].keys() ][0]
-        nk = [ s for s in x[1].keys() ][0]
-        if dup := set(m) & set(n):
-            print(f'{mk} & {nk} : {dup}' )
+# conn = HTTPConnection('v.douyin.com')
+# conn.request('GET', '/7uCmaC/')
+# resp = conn.get_response()
+# html = resp.read().decode('utf-8')
+# bsObj = BeautifulSoup(html,"html.parser")
+# newlink = bsObj.a['href']
+# print(newlink)
 
-def murge_dump():
-    m = {}
-    for x in a:
-        m.update(jload(x[1]))
-    jdump(r'd:\all.txt',m)
+# # newlink = 'https://www.iesdouyin.com/share/video/6807957042163174664/?region=CN&mid=6807920732866120452&u_code=dfi2hi3f619&titleType=title&timestamp=1585151579&utm_campaign=client_share&app=aweme&utm_medium=ios&tt_from=more&utm_source=more'
+# result = urlparse(newlink)
+# print(result)
+# # query_dict = parse_qs(result.query)
+# # print(query_dict)
+# path = result.path+'?'+result.query
+# print(path)
+# conn.request('GET',path)
+# resp = conn.get_response()
+# html = resp.read().decode('utf-8')
+# print(html)
 
+from PIL import Image
+import math,os ,csv,codecs
+from prettytable import PrettyTable 
+# from pathlib import PureWindowsPath as pp
+import time
+import openpyxl
+from pprint import pprint
 
-# murge_dump()
+from mystr import batchremovestr
+from myocr import init_client,ocr_baidu
 
-
-def unquote_url(url):
-    from urllib import parse
-    return parse.unquote(url)
-
-
-from contextlib import contextmanager
-
-@contextmanager
-def tag(name):
-    print(f"<{name}>")
-    yield
-    print(f"</{name}>")
-
-with tag("h1"):
-    print("This is Title.")
+'''
+1. iPhone wx screen shot
+2. Picsew 长截图
+3. wx 转原图
+4. Baidu OCR
+'''
 
 
-import time  
-import concurrent.futures
-from tqdm import tqdm
+path = r'M:\MyProject\JiJin'
+# xls = r'M:\MyProject\JiJin\t.xlsx'
+xls = r'N:\Doc\财务统计.xlsx'
 
-def f(x):
-    time.sleep(0.001)  # to visualize the progress
-    return x**2
 
-def run(f, my_iter):
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        todo = [ executor.submit(f,x) for x in my_iter]
-        done = concurrent.futures.as_completed(todo)
-        list(tqdm(done,total=len(my_iter)))
-        # results = list(tqdm(executor.map(f, my_iter), total=len(my_iter)))
-    # return results
 
-my_iter = range(10000)
-# run(f, my_iter)
 
-for i in tqdm(range(10000000),bar_format= '{n_fmt}/{total_fmt}{l_bar}{bar}'):
-    pass
+class jijin():
+    def __init__(self,name):
+        self.name = name
+        self.rate = None
+        self.days = None
+        self.amount = None
+        self.match = None
+
+
+def get_file_content(filePath):
+    with open(filePath, 'rb') as fp:
+        return fp.read()
+
+
+def modificate(text):
+    rlist = ['假期收益已提前发放','预约中',',','支持','零钱通','买入','净值型','智能','NEW','灵活申赎','随买随取最快当到账','HOT']
+    return batchremovestr(rlist,text)
+
+def readjj(ocrclient,jdict,path):
+    '''Crop the image every 271 pix'''
+    img = os.path.join(path,'j.png')
+    im = Image.open(img).convert('L') 
+    try:    
+        # ni.show()
+        im.save('tmp.png', 'PNG')
+        data = get_file_content('tmp.png')
+        txtlist = ocr_baidu(ocrclient,data)
+        pprint(txtlist)
+        # name = modificate(txtlist[0])
+        # rateday = txtlist[1].split('%')
+        # rate = rateday[0]
+        # if '天' in rateday[1]:
+        #     days = rateday[1].replace('天','')
+        # elif '个月' in rateday[1]:
+        #     days = rateday[1].replace('个月','')
+        # else:
+        #     days = txtlist[2].replace('天','')
+        # if modificate(days) == '':
+        #     days = 1
+        # if name not in jdict.keys():
+        #     j = jijin(name)
+        #     jdict[name] = j
+        # jdict[name].rate = rate
+        # jdict[name].days = days
+        # if txtlist == []:
+        #     break
+        # n += 1
+        # time.sleep(1)
+    except:
+        raise
+    # pprint(jdict) # details
+    return jdict
+
+def formattable_jj(jdict):
+    t = PrettyTable()
+    t.field_names = ['基金','天数','利率','数量','Match']
+    t.align['基金'] = 'l'
+    t.sortby = '基金'
+    for k in jdict.keys():
+        jj = jdict[k]
+        t.add_row([ jj.name,jj.rate,jj.days,jj.amount,jj.match ])
+    print(t)
+
+
+ocr = init_client()
+jdict = {}
+jdict = readjj(ocr,jdict,path)
+# formattable_jj(jdict)

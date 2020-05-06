@@ -7,12 +7,12 @@ __version__ = 20200224
 from PIL import Image
 import math,os ,csv,codecs
 from prettytable import PrettyTable 
-from pathlib import PureWindowsPath as pp
+# from pathlib import PureWindowsPath as pp
 import time
 import openpyxl
 from pprint import pprint
 
-from mystr import batchremovestr
+from mystr import batchremovestr,batchreplacestr
 from myocr import init_client,ocr_baidu
 
 '''
@@ -41,15 +41,29 @@ def get_file_content(filePath):
     with open(filePath, 'rb') as fp:
         return fp.read()
 
+def find_txt(txt):
+    for y in ['持有','收益','短期波动','不改','有元']: #过滤说明文字
+        if y in txt:
+            return True
+    if txt[0] in ['+','-','0']: #过滤收益
+        return True
+    return False
 
 def modificate(text):
-    rlist = ['假期收益已提前发放','预约中',',','支持','零钱通','买入','净值型','智能','NEW','灵活申赎','随买随取最快当到账']
+    rlist = ['假期收益已提前发放','预约中',',','支持','零钱通','买入','净值型',
+        '智能','NEW','灵活申赎','随买随取最快当到账','HOT',
+        # '产品家','产品读','短期涨跌不改长期配置价值',
+        '职','期收已发放','已发'
+    ]
     return batchremovestr(rlist,text)
 
+def repl(text):
+    tlist = [('室盈','富盈')]
+    return batchreplacestr(tlist,text)
   
 def formattable_jj(jdict):
     t = PrettyTable()
-    t.field_names = ['基金','天数','利率', '数量','Match']
+    t.field_names = ['基金','利率','天数','数量','Match']
     t.align['基金'] = 'l'
     t.sortby = '基金'
     for k in jdict.keys():
@@ -58,32 +72,42 @@ def formattable_jj(jdict):
     print(t)
 
 
-def readsaving(ocrclient,jdict,path,height=271.5):
+def readsaving(ocrclient,jdict,path):
     '''Crop the image every 271 pix'''
-    n = 0
     img = os.path.join(path,'s.png')
     im = Image.open(img).convert('L') 
-    while True:
-        try:    
-            box = (0,height*n,800,height*(n+1))
-            ni = im.crop(box)
-            # ni.show()
-            ni.save('tmp.png', 'PNG')
-            data = get_file_content('tmp.png')
-            txtlist = ocr_baidu(ocrclient,data)
-            # pprint(txtlist)
-            name = modificate(txtlist[0]).split('(')[0]
-            amount = txtlist[4].replace(',','')
-            j = jijin(name)
-            j.amount = amount
-            jdict[name] = j
-            if txtlist == []:
-                break
-            n += 1
-            time.sleep(1)
-        except IndexError:
-            break
-    # pprint(jdict) # details
+    im.save('tmp.png', 'PNG')
+    data = get_file_content('tmp.png')
+    # data = get_file_content(img)
+    try:    
+        txtlist = ocr_baidu(ocrclient,data)
+        # pprint(txtlist)
+        newlist = []
+        for x in txtlist:
+            if not find_txt(x):
+                newlist.append(x)  
+        # pprint(newlist)
+        mark = False
+        j = {}
+        for x in newlist:
+            try:
+                int(x[0])
+                amount = x.split('+')[0]
+                if mark:
+                    j[mark] = amount.replace(',','')
+                    mark = False
+            except ValueError:
+                name = x.split('(')[0]
+                name = modificate(repl(name))
+                j[name] = ''
+                mark = name
+        for x,y in j.items():
+            j = jijin(x)
+            j.amount = y
+            jdict[x] = j
+    except:
+        raise
+    # print(jdict) # details
     return jdict
 
 
