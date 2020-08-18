@@ -36,3 +36,74 @@ print(unquote_url(q))
 # html = resp.read().decode('utf-8')
 # print(html)
 
+002206519670-log
+
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "AWSCloudTrailAclCheck20131101",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "cloudtrail.amazonaws.com.cn"
+            },
+            "Action": "s3:GetBucketAcl",
+            "Resource": "arn:aws-cn:s3:::002206519670-log"
+        },
+        {
+            "Sid": "AWSCloudTrailWrite20131101",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "cloudtrail.amazonaws.com.cn"
+            },
+            "Action": "s3:PutObject",
+            "Resource": "arn:aws-cn:s3:::002206519670-log/*",
+            "Condition": {
+                "StringEquals": {
+                    "s3:x-amz-acl": "bucket-owner-full-control"
+                }
+            }
+        },
+
+        {
+            "Sid": "AWSConfigBucketPermissionsCheck",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "config.amazonaws.com"
+            },
+            "Action": "s3:GetBucketAcl",
+            "Resource": "arn:aws-cn:s3:::002206519670-log"
+        },
+        {
+            "Sid": "AWSConfigBucketExistenceCheck",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "config.amazonaws.com"
+            },
+            "Action": "s3:ListBucket",
+            "Resource": "arn:aws-cn:s3:::002206519670-log"
+        },
+        {
+            "Sid": " AWSConfigBucketDelivery",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "config.amazonaws.com"
+            },
+            "Action": "s3:PutObject",
+            "Resource": "arn:aws-cn:s3:::002206519670-log/*",
+            "Condition": {
+                "StringEquals": {
+                    "s3:x-amz-acl": "bucket-owner-full-control"
+                }
+            }
+        }
+
+
+
+
+
+
+
+    ]
+}
+
