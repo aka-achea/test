@@ -32,16 +32,16 @@ def scan_pbb(name,p):
     '''Capture PBB'''
     png = name+"_"+str(p)+'.png'
     print(f'Page {p}')
-    time.sleep(1.5)
-    auto.screenshot(png,region=(10,90,790,930)) # for pbb
+    time.sleep(2)
+    auto.screenshot(png,region=(10,90,1090,930)) # for pbb
 
 if __name__ == "__main__":
     try:
-        path = r'O:\SAP-C01'
+        path = r'O:'
         # name = input('Book Name: ')
         # pages = input('Total page: ')
         name = 'SAP'
-        pages = '159'
+        pages = '100'
 
         bp = os.path.join(path,name)
         if os.path.isdir(bp) is False:
