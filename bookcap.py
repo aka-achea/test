@@ -20,22 +20,28 @@ def scan_kindle(name,p):
 def scan_bookshelf(name,p): 
     '''focus need to be in middle monitor'''
     png = name+"_"+str(p)+".png"
-    auto.screenshot(png,region=(15,460,1040,1360))  # for bookshelf
+    auto.screenshot(png,region=(15,440,1040,1360))  # for bookshelf
     # time.sleep(0.2)
     auto.keyDown('ctrl')
     auto.keyDown('pagedown')
     auto.keyUp('ctrl')
     auto.keyUp('pagedown')
 
- 
+
+def scan_pbb(name,p):
+    '''Capture PBB'''
+    png = name+"_"+str(p)+'.png'
+    print(f'Page {p}')
+    time.sleep(0.5)
+    auto.screenshot(png,region=(10,90,1090,930)) # for pbb
 
 if __name__ == "__main__":
     try:
-        path = r'E:\daka'
+        path = r'O:'
         # name = input('Book Name: ')
         # pages = input('Total page: ')
-        name = 'DO'
-        pages = '541'
+        name = 'SAP'
+        pages = '200'
 
         bp = os.path.join(path,name)
         if os.path.isdir(bp) is False:
@@ -46,19 +52,12 @@ if __name__ == "__main__":
         # print(width,height)
         auto.PAUSE = 1
         # auto.click(150,150,button='left') # for kindle
-        auto.click(800,800,button='left') # for bookshelf
+        # auto.click(100,200,button='left') # for bookshelf
 
         for p in range(1,int(pages)+1):
-            scan_bookshelf(name,p)
+            scan_pbb(name,p)
         print('finish book capture')
     except KeyboardInterrupt:
         print("Stop")
 
 
-
-"""
-change log:
-2019.7.19 add bookshelf for aws v1.2
-2018.12.7 resize with new screen v1.1
-2017.6.21 build basic screenshot funciton v1.0
-"""

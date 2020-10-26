@@ -11,7 +11,7 @@ def unquote_url(url):
     from urllib import parse
     return parse.unquote(url)
 
-print(unquote_url(q))
+# print(unquote_url(q))
 # from bs4 import BeautifulSoup
 # from hyper import HTTPConnection
 # from urllib.parse import urlparse,parse_qs
@@ -35,3 +35,19 @@ print(unquote_url(q))
 # resp = conn.get_response()
 # html = resp.read().decode('utf-8')
 # print(html)
+<<<<<<< HEAD
+=======
+
+import json,pprint
+ffile = r'N:\MyProject\BM\ff.log'
+# ff = {1: {'email': 'CJYRB@hotmail.com',
+#      'link': 'https://mp.weixin.qq.com/s/11OPqElE8vXjGs2E1GTHGw',
+#      'tag': '史',
+#      'timestamp': '2020-10-21 09:59:32'}}
+# with open(ffile,'w',encoding='utf-8') as x:
+#     json.dump(ff,x,ensure_ascii=False,indent=2)
+
+with open(ffile,'r',encoding='utf-8') as f:
+    ff = json.loads(f.read())
+    pprint.pprint(ff)
+>>>>>>> 0c7c1723615e35bf4af2daf47e5a24314262bbd1
