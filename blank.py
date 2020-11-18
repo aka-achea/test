@@ -35,8 +35,6 @@ def unquote_url(url):
 # resp = conn.get_response()
 # html = resp.read().decode('utf-8')
 # print(html)
-<<<<<<< HEAD
-=======
 
 import json,pprint
 ffile = r'N:\MyProject\BM\ff.log'
@@ -50,4 +48,3 @@ ffile = r'N:\MyProject\BM\ff.log'
 with open(ffile,'r',encoding='utf-8') as f:
     ff = json.loads(f.read())
     pprint.pprint(ff)
->>>>>>> 0c7c1723615e35bf4af2daf47e5a24314262bbd1
