@@ -48,3 +48,6 @@ ffile = r'N:\MyProject\BM\ff.log'
 with open(ffile,'r',encoding='utf-8') as f:
     ff = json.loads(f.read())
     pprint.pprint(ff)
+
+import os
+os.remove(r'M:\Music\xd.log')
