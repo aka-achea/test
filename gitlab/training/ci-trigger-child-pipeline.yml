@@ -1,0 +1,7 @@
+build and test module a:
+  trigger: 
+    include: module-a/m.gitlab-ci.yml
+  rules:
+    - changes:
+        - module-a/*
+      when: always

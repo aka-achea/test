@@ -1,0 +1,120 @@
+stages:
+    - test
+    - build
+    - review
+    - deploy
+
+
+variables:
+    INLINE_GLOBAL_VARIABLE: I’m an inline variable set at the global level of the CI/CD configuration file
+
+test job:
+    stage: test
+    script:
+        - echo "I am a unit test!"
+        - kubectl get pod
+    tags:
+        - shell
+
+build job:
+    stage: build
+    script:
+        - echo "I am a build image!"
+
+environment echoes:
+  stage: build
+  script:
+    - echo "Who am I running as..."
+    - whoami
+    - echo "Where am I..."
+    - pwd
+    - ls -al
+    - echo "Here's what is available in our environment..."
+    - env
+
+environment variables:
+  stage: build
+  variables:
+    INLINE_LOCAL_VARIABLE: I’m an inline variable set at the job level of the CI/CD configuration file
+  script:
+    - echo "Do a test here"
+    - echo "Here are some default, global, & local variables..."
+    - echo $CI_COMMIT_SHORT_SHA
+    - echo $group_level_variable
+    - echo $project_level_variable
+    - echo $INLINE_GLOBAL_VARIABLE
+    - echo $INLINE_LOCAL_VARIABLE
+
+build app:
+  image: golang:latest
+  stage: build
+  script:
+    - go build -o app main.go
+  artifacts:
+    paths:
+      - app
+    expire_in: 1 hour
+
+deploy review:
+  stage: review
+  # only: 
+  #   - branches
+  # except: 
+  #   - master
+  script:
+    - echo "Do your average deploy here"
+  rules:
+    - if: '$CI_COMMIT_REF_NAME == "master"'
+      when: never
+    - if: '$CI_COMMIT_TAG'
+      when: never
+    - when: always
+  environment:
+    name: review/$CI_COMMIT_REF_NAME
+
+deploy release:
+  stage: deploy
+  # only:
+  #   - tags
+  # except: 
+  #   - master
+  script:
+    - echo "Deploy to a production environment"
+  rules:
+    - if: '$CI_COMMIT_REF_NAME != "master" && $CI_COMMIT_TAG'
+      when: manual
+  environment:
+    name: production
+
+deploy staging:
+  stage: deploy
+  # only:
+  #   - master
+  script:
+    - echo "Deploy to a staging environment"
+  rules:
+    - if: '$CI_COMMIT_REF_NAME == "master"'
+      when: always
+    - when: never
+  environment:
+    name: staging
+
+build image:
+  image: docker:stable
+  stage: build
+  variables:
+    CONTAINER_BUILD_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+  before_script:
+    - docker info
+  tags:
+    - gxd-runner
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker build -t $CONTAINER_BUILD_IMAGE .
+    - docker push $CONTAINER_BUILD_IMAGE
+  when: manual
+  # only:
+  #   - schedules
+
+include:
+  template: Security/SAST.gitlab-ci.yml

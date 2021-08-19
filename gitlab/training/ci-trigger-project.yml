@@ -1,0 +1,4 @@
+trigger downstream project:
+  trigger:
+    project: gitlab-jh-training-group/sessions/downstream-project
+    branch: master

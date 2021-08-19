@@ -1,0 +1,9 @@
+build app:
+  image: golang:latest
+  stage: build
+  script:
+    - go build -o app main.go
+  artifacts:
+    paths:
+      - app
+    expire_in: 1 hour

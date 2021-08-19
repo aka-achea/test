@@ -1,0 +1,13 @@
+stages:
+    - test
+    - build
+
+test job:
+    stage: test
+    script:
+        - echo "I am a unit test!"
+
+build job:
+    stage: build
+    script:
+        - echo "I am a build image!"

@@ -1,0 +1,9 @@
+build-module-a:
+  stage: build
+  script:
+    - echo "Build module a"
+
+test-module-a:
+  stage: test
+  script:
+    - echo "Test module a"
