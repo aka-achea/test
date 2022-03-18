@@ -33,5 +33,15 @@ def rename_pic(path):
             dst = os.path.join(path,pic.replace('_副本', ''))
             f_move(src,dst)
 
+def rename_7z(p):
+    patten = re.compile('D\d{4}-\d{2}')
+    # patten = re.compile('BM-\d{2}-\d{2}')
+    for f in os.listdir(p):
+        if patten.search(f):
+            print(f)
+            src = os.path.join(p,f)
+            dst = '.'.join([src,'7z'])
+            print(dst)
+            f_move(src,dst)
 
-rename_pic(r'N:\新建文件夹\新西兰 - classic')
+rename_7z(r'N:\LAB')
