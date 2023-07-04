@@ -1,0 +1,14 @@
+version: "2.0"
+services:
+  spider:
+    image: selenium-python:v1
+    volumes:
+      - ./spider.py:/code/remote.py  # 这里把刚刚的代码映射到这个目录
+    command: python /code/remote.py  # 定义启动容器执行的命令
+    depends_on:
+      - chrome
+  chrome:
+    image: selenium/standalone-chrome:latest
+    ports:
+      - "4444:4444"
+    shm_size: 2g
